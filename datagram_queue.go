@@ -9,9 +9,12 @@ import (
 	"github.com/metacubex/quic-go/internal/wire"
 )
 
+const DatagramFrameMaxPeekTimes = 10
+
 type datagramQueue struct {
 	sendQueue chan *wire.DatagramFrame
 	nextFrame *wire.DatagramFrame
+	peekTimes int
 
 	rcvMx    sync.Mutex
 	rcvQueue [][]byte
@@ -60,7 +63,15 @@ func (h *datagramQueue) AddAndWait(f *wire.DatagramFrame) error {
 // If actually sent out, Pop needs to be called before the next call to Peek.
 func (h *datagramQueue) Peek() *wire.DatagramFrame {
 	if h.nextFrame != nil {
-		return h.nextFrame
+		h.peekTimes++
+		if h.peekTimes > DatagramFrameMaxPeekTimes {
+			if h.logger.Debug() {
+				h.logger.Debugf("Discarded DATAGRAM frame (%d bytes payload)", len(h.nextFrame.Data))
+			}
+			h.nextFrame = nil
+		} else {
+			return h.nextFrame
+		}
 	}
 	select {
 	case h.nextFrame = <-h.sendQueue:
@@ -68,6 +79,7 @@ func (h *datagramQueue) Peek() *wire.DatagramFrame {
 	default:
 		return nil
 	}
+	h.peekTimes = 0
 	return h.nextFrame
 }
 
