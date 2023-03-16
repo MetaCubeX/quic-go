@@ -329,6 +329,8 @@ type Config struct {
 	// Enable QUIC datagram support (RFC 9221).
 	EnableDatagrams bool
 	Tracer          func(context.Context, logging.Perspective, ConnectionID) *logging.ConnectionTracer
+
+	MaxDatagramFrameSize int64
 }
 
 type ClientHelloInfo struct {
