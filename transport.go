@@ -475,3 +475,11 @@ func (t *Transport) ReadNonQUICPacket(ctx context.Context, b []byte) (int, net.A
 		return 0, nil, errors.New("closed")
 	}
 }
+
+func (t *Transport) SetCreatedConn(createdConn bool) {
+	t.createdConn = createdConn
+}
+
+func (t *Transport) SetSingleUse(isSingleUse bool) {
+	t.isSingleUse = isSingleUse
+}
