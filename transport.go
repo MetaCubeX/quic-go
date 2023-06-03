@@ -549,3 +549,11 @@ func setTLSConfigServerName(tlsConf *tls.Config, addr net.Addr, host string) {
 	}
 	tlsConf.ServerName = h
 }
+
+func (t *Transport) SetCreatedConn(createdConn bool) {
+	t.createdConn = createdConn
+}
+
+func (t *Transport) SetSingleUse(isSingleUse bool) {
+	t.isSingleUse = isSingleUse
+}
