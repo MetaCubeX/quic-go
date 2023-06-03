@@ -468,6 +468,14 @@ func (t *Transport) ReadNonQUICPacket(ctx context.Context, b []byte) (int, net.A
 	}
 }
 
+func (t *Transport) SetCreatedConn(createdConn bool) {
+	t.createdConn = createdConn
+}
+
+func (t *Transport) SetSingleUse(isSingleUse bool) {
+	t.isSingleUse = isSingleUse
+}
+
 func setTLSConfigServerName(tlsConf *tls.Config, addr net.Addr, host string) {
 	// If no ServerName is set, infer the ServerName from the host we're connecting to.
 	if tlsConf.ServerName != "" {
