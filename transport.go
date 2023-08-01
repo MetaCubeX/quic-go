@@ -308,9 +308,6 @@ func (t *Transport) close(e error) {
 	t.closed = true
 }
 
-// only print warnings about the UDP receive buffer size once
-var setBufferWarningOnce sync.Once
-
 func (t *Transport) listen(conn rawConn) {
 	defer close(t.listening)
 	defer getMultiplexer().RemoveConn(t.Conn)
