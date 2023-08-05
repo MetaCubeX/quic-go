@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/quic-go/quic-go/internal/ackhandler"
-	"github.com/quic-go/quic-go/internal/handshake"
-	"github.com/quic-go/quic-go/internal/protocol"
-	"github.com/quic-go/quic-go/internal/qerr"
-	"github.com/quic-go/quic-go/internal/wire"
+	"github.com/metacubex/quic-go/internal/ackhandler"
+	"github.com/metacubex/quic-go/internal/handshake"
+	"github.com/metacubex/quic-go/internal/protocol"
+	"github.com/metacubex/quic-go/internal/qerr"
+	"github.com/metacubex/quic-go/internal/wire"
 )
 
 var errNothingToPack = errors.New("nothing to pack")

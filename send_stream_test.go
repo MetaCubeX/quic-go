@@ -12,10 +12,10 @@ import (
 	"golang.org/x/exp/rand"
 
 	"github.com/golang/mock/gomock"
-	"github.com/quic-go/quic-go/internal/ackhandler"
-	"github.com/quic-go/quic-go/internal/mocks"
-	"github.com/quic-go/quic-go/internal/protocol"
-	"github.com/quic-go/quic-go/internal/wire"
+	"github.com/metacubex/quic-go/internal/ackhandler"
+	"github.com/metacubex/quic-go/internal/mocks"
+	"github.com/metacubex/quic-go/internal/protocol"
+	"github.com/metacubex/quic-go/internal/wire"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
