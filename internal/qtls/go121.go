@@ -152,3 +152,9 @@ func findExtraData(extras [][]byte) []byte {
 	}
 	return nil
 }
+
+func SendSessionTicket(c *QUICConn, allow0RTT bool) error {
+	return c.SendSessionTicket(tls.QUICSessionTicketOptions{
+		EarlyData: allow0RTT,
+	})
+}
