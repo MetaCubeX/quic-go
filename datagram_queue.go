@@ -25,7 +25,7 @@ type datagramQueue struct {
 
 	hasData func()
 
-	dequeued chan struct{}
+	dequeued chan error
 
 	logger utils.Logger
 }
@@ -35,7 +35,7 @@ func newDatagramQueue(hasData func(), logger utils.Logger) *datagramQueue {
 		hasData:   hasData,
 		sendQueue: make(chan *wire.DatagramFrame, 1),
 		rcvd:      make(chan struct{}, 1),
-		dequeued:  make(chan struct{}),
+		dequeued:  make(chan error),
 		closed:    make(chan struct{}),
 		logger:    logger,
 	}
@@ -52,8 +52,8 @@ func (h *datagramQueue) AddAndWait(f *wire.DatagramFrame) error {
 	}
 
 	select {
-	case <-h.dequeued:
-		return nil
+	case err := <-h.dequeued:
+		return err
 	case <-h.closed:
 		return h.closeErr
 	}
@@ -75,7 +75,6 @@ func (h *datagramQueue) Peek() *wire.DatagramFrame {
 	}
 	select {
 	case h.nextFrame = <-h.sendQueue:
-		h.dequeued <- struct{}{}
 	default:
 		return nil
 	}
