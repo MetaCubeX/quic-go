@@ -173,15 +173,15 @@ func (t *Transport) dial(ctx context.Context, addr net.Addr, hostname string, tl
 	}
 	tlsConf = tlsConf.Clone()
 	tlsConf.MinVersion = tls.VersionTLS13
-	// If no ServerName is set, infer the ServerName from the hostname we're connecting to.
-	if tlsConf.ServerName == "" {
-		if hostname == "" {
-			if udpAddr, ok := addr.(*net.UDPAddr); ok {
-				hostname = udpAddr.IP.String()
-			}
-		}
-		tlsConf.ServerName = hostname
-	}
+	//// If no ServerName is set, infer the ServerName from the hostname we're connecting to.
+	//if tlsConf.ServerName == "" {
+	//	if hostname == "" {
+	//		if udpAddr, ok := addr.(*net.UDPAddr); ok {
+	//			hostname = udpAddr.IP.String()
+	//		}
+	//	}
+	//	tlsConf.ServerName = hostname
+	//}
 	return dial(ctx, newSendConn(t.conn, addr, packetInfo{}, utils.DefaultLogger), t.connIDGenerator, t.handlerMap, tlsConf, conf, onClose, use0RTT)
 }
 
