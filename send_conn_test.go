@@ -4,7 +4,7 @@ import (
 	"net"
 	"net/netip"
 
-	"github.com/quic-go/quic-go/internal/utils"
+	"github.com/metacubex/quic-go/internal/utils"
 
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo/v2"
