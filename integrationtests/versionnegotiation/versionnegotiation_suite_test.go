@@ -7,10 +7,10 @@ import (
 	"flag"
 	"testing"
 
-	"github.com/quic-go/quic-go/integrationtests/tools"
-	"github.com/quic-go/quic-go/logging"
+	"github.com/metacubex/quic-go/integrationtests/tools"
+	"github.com/metacubex/quic-go/logging"
 
-	"github.com/quic-go/quic-go"
+	"github.com/metacubex/quic-go"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
