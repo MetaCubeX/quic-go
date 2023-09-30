@@ -54,6 +54,11 @@ type zeroRTTQueue struct {
 	expiration time.Time
 }
 
+type rejectedPacket struct {
+	receivedPacket
+	hdr *wire.Header
+}
+
 // A Listener of QUIC
 type baseServer struct {
 	mutex sync.Mutex
@@ -104,7 +109,9 @@ type baseServer struct {
 	closed                  bool
 	running                 chan struct{} // closed as soon as run() returns
 	versionNegotiationQueue chan receivedPacket
-	invalidTokenQueue       chan receivedPacket
+	invalidTokenQueue       chan rejectedPacket
+	connectionRefusedQueue  chan rejectedPacket
+	retryQueue              chan rejectedPacket
 
 	connQueue    chan quicConn
 	connQueueLen int32 // to be used as an atomic
@@ -245,7 +252,9 @@ func newServer(
 		running:                   make(chan struct{}),
 		receivedPackets:           make(chan receivedPacket, protocol.MaxServerUnprocessedPackets),
 		versionNegotiationQueue:   make(chan receivedPacket, 4),
-		invalidTokenQueue:         make(chan receivedPacket, 4),
+		invalidTokenQueue:         make(chan rejectedPacket, 4),
+		connectionRefusedQueue:    make(chan rejectedPacket, 4),
+		retryQueue:                make(chan rejectedPacket, 8),
 		newConn:                   newConnection,
 		tracer:                    tracer,
 		logger:                    utils.DefaultLogger.WithPrefix("server"),
@@ -290,6 +299,10 @@ func (s *baseServer) runSendQueue() {
 			s.maybeSendVersionNegotiationPacket(p)
 		case p := <-s.invalidTokenQueue:
 			s.maybeSendInvalidToken(p)
+		case p := <-s.connectionRefusedQueue:
+			s.sendConnectionRefused(p)
+		case p := <-s.retryQueue:
+			s.sendRetry(p)
 		}
 	}
 }
@@ -580,30 +593,35 @@ func (s *baseServer) handleInitialImpl(p receivedPacket, hdr *wire.Header) error
 			// For Retry tokens, we send an INVALID_ERROR if
 			// * the token is too old, or
 			// * the token is invalid, in case of a retry token.
-			s.enqueueInvalidToken(p)
+			select {
+			case s.invalidTokenQueue <- rejectedPacket{receivedPacket: p, hdr: hdr}:
+			default:
+				// drop packet if we can't send out the  INVALID_TOKEN packets fast enough
+				p.buffer.Release()
+			}
 			return nil
 		}
 	}
 	if token == nil && s.config.RequireAddressValidation(p.remoteAddr) {
 		// Retry invalidates all 0-RTT packets sent.
 		delete(s.zeroRTTQueues, hdr.DestConnectionID)
-		go func() {
-			defer p.buffer.Release()
-			if err := s.sendRetry(p.remoteAddr, hdr, p.info); err != nil {
-				s.logger.Debugf("Error sending Retry: %s", err)
-			}
-		}()
+		select {
+		case s.retryQueue <- rejectedPacket{receivedPacket: p, hdr: hdr}:
+		default:
+			// drop packet if we can't send out Retry packets fast enough
+			p.buffer.Release()
+		}
 		return nil
 	}
 
 	if queueLen := atomic.LoadInt32(&s.connQueueLen); queueLen >= protocol.MaxAcceptQueueSize {
 		s.logger.Debugf("Rejecting new connection. Server currently busy. Accept queue length: %d (max %d)", queueLen, protocol.MaxAcceptQueueSize)
-		go func() {
-			defer p.buffer.Release()
-			if err := s.sendConnectionRefused(p.remoteAddr, hdr, p.info); err != nil {
-				s.logger.Debugf("Error rejecting connection: %s", err)
-			}
-		}()
+		select {
+		case s.connectionRefusedQueue <- rejectedPacket{receivedPacket: p, hdr: hdr}:
+		default:
+			// drop packet if we can't send out the CONNECTION_REFUSED fast enough
+			p.buffer.Release()
+		}
 		return nil
 	}
 
@@ -663,12 +681,12 @@ func (s *baseServer) handleInitialImpl(p receivedPacket, hdr *wire.Header) error
 
 		return conn, true
 	}); !added {
-		go func() {
-			defer p.buffer.Release()
-			if err := s.sendConnectionRefused(p.remoteAddr, hdr, p.info); err != nil {
-				s.logger.Debugf("Error rejecting connection: %s", err)
-			}
-		}()
+		select {
+		case s.connectionRefusedQueue <- rejectedPacket{receivedPacket: p, hdr: hdr}:
+		default:
+			// drop packet if we can't send out the CONNECTION_REFUSED fast enough
+			p.buffer.Release()
+		}
 		return nil
 	}
 	go conn.run()
@@ -708,7 +726,14 @@ func (s *baseServer) handleNewConn(conn quicConn) {
 	}
 }
 
-func (s *baseServer) sendRetry(remoteAddr net.Addr, hdr *wire.Header, info packetInfo) error {
+func (s *baseServer) sendRetry(p rejectedPacket) {
+	if err := s.sendRetryPacket(p); err != nil {
+		s.logger.Debugf("Error sending Retry packet: %s", err)
+	}
+}
+
+func (s *baseServer) sendRetryPacket(p rejectedPacket) error {
+	hdr := p.hdr
 	// Log the Initial packet now.
 	// If no Retry is sent, the packet will be logged by the connection.
 	(&wire.ExtendedHeader{Header: *hdr}).Log(s.logger)
@@ -716,7 +741,7 @@ func (s *baseServer) sendRetry(remoteAddr net.Addr, hdr *wire.Header, info packe
 	if err != nil {
 		return err
 	}
-	token, err := s.tokenGenerator.NewRetryToken(remoteAddr, hdr.DestConnectionID, srcConnID)
+	token, err := s.tokenGenerator.NewRetryToken(p.remoteAddr, hdr.DestConnectionID, srcConnID)
 	if err != nil {
 		return err
 	}
@@ -742,35 +767,18 @@ func (s *baseServer) sendRetry(remoteAddr net.Addr, hdr *wire.Header, info packe
 	tag := handshake.GetRetryIntegrityTag(buf.Data, hdr.DestConnectionID, hdr.Version)
 	buf.Data = append(buf.Data, tag[:]...)
 	if s.tracer != nil && s.tracer.SentPacket != nil {
-		s.tracer.SentPacket(remoteAddr, &replyHdr.Header, protocol.ByteCount(len(buf.Data)), nil)
+		s.tracer.SentPacket(p.remoteAddr, &replyHdr.Header, protocol.ByteCount(len(buf.Data)), nil)
 	}
-	_, err = s.conn.WritePacket(buf.Data, remoteAddr, info.OOB(), 0, protocol.ECNUnsupported)
+	_, err = s.conn.WritePacket(buf.Data, p.remoteAddr, p.info.OOB(), 0, protocol.ECNUnsupported)
 	return err
 }
 
-func (s *baseServer) enqueueInvalidToken(p receivedPacket) {
-	select {
-	case s.invalidTokenQueue <- p:
-	default:
-		// it's fine to drop INVALID_TOKEN packets when we are busy
-		p.buffer.Release()
-	}
-}
-
-func (s *baseServer) maybeSendInvalidToken(p receivedPacket) {
+func (s *baseServer) maybeSendInvalidToken(p rejectedPacket) {
 	defer p.buffer.Release()
-
-	hdr, _, _, err := wire.ParsePacket(p.data)
-	if err != nil {
-		if s.tracer != nil && s.tracer.DroppedPacket != nil {
-			s.tracer.DroppedPacket(p.remoteAddr, logging.PacketTypeNotDetermined, p.Size(), logging.PacketDropHeaderParseError)
-		}
-		s.logger.Debugf("Error parsing packet: %s", err)
-		return
-	}
 
 	// Only send INVALID_TOKEN if we can unprotect the packet.
 	// This makes sure that we won't send it for packets that were corrupted.
+	hdr := p.hdr
 	sealer, opener := handshake.NewInitialAEAD(hdr.DestConnectionID, protocol.PerspectiveServer, hdr.Version)
 	data := p.data[:hdr.ParsedLen()+hdr.Length]
 	extHdr, err := unpackLongHeader(opener, hdr, data, hdr.Version)
@@ -797,9 +805,12 @@ func (s *baseServer) maybeSendInvalidToken(p receivedPacket) {
 	}
 }
 
-func (s *baseServer) sendConnectionRefused(remoteAddr net.Addr, hdr *wire.Header, info packetInfo) error {
-	sealer, _ := handshake.NewInitialAEAD(hdr.DestConnectionID, protocol.PerspectiveServer, hdr.Version)
-	return s.sendError(remoteAddr, hdr, sealer, qerr.ConnectionRefused, info)
+func (s *baseServer) sendConnectionRefused(p rejectedPacket) {
+	defer p.buffer.Release()
+	sealer, _ := handshake.NewInitialAEAD(p.hdr.DestConnectionID, protocol.PerspectiveServer, p.hdr.Version)
+	if err := s.sendError(p.remoteAddr, p.hdr, sealer, qerr.ConnectionRefused, p.info); err != nil {
+		s.logger.Debugf("Error sending CONNECTION_REFUSED error: %s", err)
+	}
 }
 
 // sendError sends the error as a response to the packet received with header hdr
