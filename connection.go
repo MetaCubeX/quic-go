@@ -9,7 +9,6 @@ import (
 	"io"
 	"net"
 	"reflect"
-	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -2373,11 +2372,9 @@ func (s *connection) SendMessage(p []byte) error {
 	}
 
 	f := &wire.DatagramFrame{DataLenPresent: true}
-	if runtime.GOOS == "windows" {
-		maxDataLen := f.MaxDataLen(s.peerParams.MaxDatagramFrameSize, s.version)
-		if protocol.ByteCount(len(p)) > maxDataLen {
-			return ErrMessageTooLarge(maxDataLen)
-		}
+	maxDataLen := f.MaxDataLen(s.peerParams.MaxDatagramFrameSize, s.version)
+	if protocol.ByteCount(len(p)) > maxDataLen {
+		return ErrMessageTooLarge(maxDataLen)
 	}
 	f.Data = make([]byte, len(p))
 	copy(f.Data, p)
