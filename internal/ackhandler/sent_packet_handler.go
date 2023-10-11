@@ -83,7 +83,9 @@ type sentPacketHandler struct {
 	// Only applies to the application-data packet number space.
 	lowestNotConfirmedAcked protocol.PacketNumber
 
-	ackedPackets []*packet // to avoid allocations in detectAndRemoveAckedPackets
+	ackedPackets     []*packet // to avoid allocations in detectAndRemoveAckedPackets
+	ackedPacketsInfo []congestionExt.AckedPacketInfo
+	lostPacketsInfo  []congestionExt.LostPacketInfo
 
 	bytesInFlight protocol.ByteCount
 
@@ -272,6 +274,7 @@ func (h *sentPacketHandler) SentPacket(
 			h.numProbesToSend--
 		}
 	}
+
 	cc := h.getCongestionControl()
 	cc.OnPacketSent(t, h.bytesInFlight, pn, size, isAckEliciting)
 
@@ -362,9 +365,6 @@ func (h *sentPacketHandler) ReceivedAck(ack *wire.AckFrame, encLevel protocol.En
 		}
 	}
 
-	ackedPacketsInfo := []congestionExt.AckedPacketInfo{}
-	lostPacketsInfo := []congestionExt.LostPacketInfo{}
-
 	// Only inform the ECN tracker about new 1-RTT ACKs if the ACK increases the largest acked.
 	if encLevel == protocol.Encryption1RTT && h.ecnTracker != nil && largestAcked > pnSpace.largestAcked {
 		congested := h.ecnTracker.HandleNewlyAcked(ackedPackets, int64(ack.ECT0), int64(ack.ECT1), int64(ack.ECNCE))
@@ -375,14 +375,15 @@ func (h *sentPacketHandler) ReceivedAck(ack *wire.AckFrame, encLevel protocol.En
 
 	pnSpace.largestAcked = max(pnSpace.largestAcked, largestAcked)
 
-	if lostPacketsInfo, err = h.detectLostPackets(rcvTime, encLevel); err != nil {
+	if err := h.detectLostPackets(rcvTime, encLevel); err != nil {
 		return false, err
 	}
+	h.ackedPacketsInfo = h.ackedPacketsInfo[:0]
 	var acked1RTTPacket bool
 	for _, p := range ackedPackets {
 		if p.includedInBytesInFlight && !p.declaredLost {
 			cc.OnPacketAcked(p.PacketNumber, p.Length, priorInFlight, rcvTime)
-			ackedPacketsInfo = append(ackedPacketsInfo, congestionExt.AckedPacketInfo{
+			h.ackedPacketsInfo = append(h.ackedPacketsInfo, congestionExt.AckedPacketInfo{
 				PacketNumber: congestionExt.PacketNumber(p.PacketNumber),
 				BytesAcked:   congestionExt.ByteCount(p.Length),
 			})
@@ -395,13 +396,15 @@ func (h *sentPacketHandler) ReceivedAck(ack *wire.AckFrame, encLevel protocol.En
 	}
 
 	if cex, ok := h.congestion.(congestion.SendAlgorithmEx); ok &&
-		(len(ackedPacketsInfo) != 0 || len(lostPacketsInfo) != 0) {
-		cex.OnCongestionEventEx(priorInFlight, rcvTime, ackedPacketsInfo, lostPacketsInfo)
+		(len(h.ackedPacketsInfo) != 0 || len(h.lostPacketsInfo) != 0) {
+		cex.OnCongestionEventEx(priorInFlight, rcvTime, h.ackedPacketsInfo, h.lostPacketsInfo)
 	}
 
 	// After this point, we must not use ackedPackets any longer!
 	// We've already returned the buffers.
-	ackedPackets = nil //nolint:ineffassign // This is just to be on the safe side.
+	ackedPackets = nil       //nolint:ineffassign // This is just to be on the safe side.
+	h.ackedPacketsInfo = nil //nolint:ineffassign // This is just to be on the safe side.
+	h.lostPacketsInfo = nil  //nolint:ineffassign // This is just to be on the safe side.
 
 	// Reset the pto_count unless the client is unsure if the server has validated the client's address.
 	if h.peerCompletedAddressValidation {
@@ -624,8 +627,8 @@ func (h *sentPacketHandler) lossDetectionTime(now time.Time) alarmTimer {
 	}
 }
 
-func (h *sentPacketHandler) detectLostPackets(now time.Time, encLevel protocol.EncryptionLevel) ([]congestionExt.LostPacketInfo, error) {
-	lostPackets := []congestionExt.LostPacketInfo{}
+func (h *sentPacketHandler) detectLostPackets(now time.Time, encLevel protocol.EncryptionLevel) error {
+	h.lostPacketsInfo = h.lostPacketsInfo[:0]
 	pnSpace := h.getPacketNumberSpace(encLevel)
 	pnSpace.lossTime = time.Time{}
 
@@ -684,7 +687,7 @@ func (h *sentPacketHandler) detectLostPackets(now time.Time, encLevel protocol.E
 				if !p.IsPathMTUProbePacket {
 					cc.OnCongestionEvent(p.PacketNumber, p.Length, priorInFlight)
 				}
-				lostPackets = append(lostPackets, congestionExt.LostPacketInfo{
+				h.lostPacketsInfo = append(h.lostPacketsInfo, congestionExt.LostPacketInfo{
 					PacketNumber: congestionExt.PacketNumber(p.PacketNumber),
 					BytesLost:    congestionExt.ByteCount(p.Length),
 				})
@@ -695,7 +698,7 @@ func (h *sentPacketHandler) detectLostPackets(now time.Time, encLevel protocol.E
 		}
 		return true, nil
 	})
-	return lostPackets, err
+	return err
 }
 
 func (h *sentPacketHandler) OnLossDetectionTimeout(now time.Time) error {
@@ -710,11 +713,11 @@ func (h *sentPacketHandler) OnLossDetectionTimeout(now time.Time) error {
 			h.tracer.LossTimerExpired(logging.TimerTypeACK, encLevel)
 		}
 		// Early retransmit or time loss detection
-		lostPacketsInfo, err := h.detectLostPackets(now, encLevel)
+		err := h.detectLostPackets(now, encLevel)
 
 		if cex, ok := h.congestion.(congestion.SendAlgorithmEx); ok &&
-			len(lostPacketsInfo) != 0 {
-			cex.OnCongestionEventEx(priorInFlight, time.Now(), nil, lostPacketsInfo)
+			len(h.lostPacketsInfo) != 0 {
+			cex.OnCongestionEventEx(priorInFlight, now, nil, h.lostPacketsInfo)
 		}
 
 		return err
@@ -849,7 +852,7 @@ func (h *sentPacketHandler) SendMode(now time.Time) SendMode {
 		}
 		return SendAck
 	}
-	if !h.getCongestionControl().HasPacingBudget(now) {
+	if !cc.HasPacingBudget(now) {
 		return SendPacingLimited
 	}
 	return SendAny
