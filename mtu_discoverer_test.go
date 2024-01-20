@@ -132,7 +132,7 @@ var _ = Describe("MTU Discoverer", func() {
 			}
 			diff := realMTU - currentMTU
 			Expect(diff).To(BeNumerically(">=", 0))
-			maxDiff = max(maxDiff, diff)
+			maxDiff = utils.Max(maxDiff, diff)
 			if maxMTU > currentMTU+maxMTU {
 				Expect(tracedMTU).To(Equal(currentMTU))
 				Expect(tracerDone).To(BeTrue())
