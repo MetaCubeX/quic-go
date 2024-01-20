@@ -480,7 +480,7 @@ func (h *cryptoSetup) setWriteKey(el qtls.QUICEncryptionLevel, suiteID uint16, t
 	suite := getCipherSuite(suiteID)
 	//nolint:exhaustive // The TLS stack doesn't export Initial keys.
 	switch el {
-	case tls.QUICEncryptionLevelEarly:
+	case qtls.QUICEncryptionLevelEarly:
 		if h.perspective == protocol.PerspectiveServer {
 			panic("Received 0-RTT write key for the server")
 		}
@@ -528,14 +528,14 @@ func (h *cryptoSetup) setWriteKey(el qtls.QUICEncryptionLevel, suiteID uint16, t
 }
 
 // writeRecord is called when TLS writes data
-func (h *cryptoSetup) writeRecord(encLevel tls.QUICEncryptionLevel, p []byte) {
+func (h *cryptoSetup) writeRecord(encLevel qtls.QUICEncryptionLevel, p []byte) {
 	//nolint:exhaustive // handshake records can only be written for Initial and Handshake.
 	switch encLevel {
-	case tls.QUICEncryptionLevelInitial:
+	case qtls.QUICEncryptionLevelInitial:
 		h.events = append(h.events, Event{Kind: EventWriteInitialData, Data: p})
-	case tls.QUICEncryptionLevelHandshake:
+	case qtls.QUICEncryptionLevelHandshake:
 		h.events = append(h.events, Event{Kind: EventWriteHandshakeData, Data: p})
-	case tls.QUICEncryptionLevelApplication:
+	case qtls.QUICEncryptionLevelApplication:
 		panic("unexpected write")
 	default:
 		panic(fmt.Sprintf("unexpected write encryption level: %s", encLevel))
