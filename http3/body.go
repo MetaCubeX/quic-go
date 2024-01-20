@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/quic-go/quic-go"
+	"github.com/quic-go/quic-go/internal/utils"
 )
 
 // A Hijacker allows hijacking of the stream creating part of a quic.Session from a http.Response.Body.
@@ -56,7 +57,7 @@ func (r *body) Read(b []byte) (int, error) {
 		return 0, err
 	}
 	if r.hasContentLength {
-		b = b[:min(int64(len(b)), r.remainingContentLength)]
+		b = b[:utils.Min(int64(len(b)), r.remainingContentLength)]
 	}
 	n, err := r.str.Read(b)
 	r.remainingContentLength -= int64(n)
