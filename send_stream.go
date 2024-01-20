@@ -289,7 +289,7 @@ func (s *sendStream) popNewStreamFrame(maxBytes, sendWindow protocol.ByteCount, 
 		nextFrame := s.nextFrame
 		s.nextFrame = nil
 
-		maxDataLen := min(sendWindow, nextFrame.MaxDataLen(maxBytes, v))
+		maxDataLen := utils.Min(sendWindow, nextFrame.MaxDataLen(maxBytes, v))
 		if nextFrame.DataLen() > maxDataLen {
 			s.nextFrame = wire.GetStreamFrame()
 			s.nextFrame.StreamID = s.streamID
@@ -324,7 +324,7 @@ func (s *sendStream) popNewStreamFrameWithoutBuffer(f *wire.StreamFrame, maxByte
 	if maxDataLen == 0 { // a STREAM frame must have at least one byte of data
 		return s.dataForWriting != nil || s.nextFrame != nil || s.finishedWriting
 	}
-	s.getDataForWriting(f, min(maxDataLen, sendWindow))
+	s.getDataForWriting(f, utils.Min(maxDataLen, sendWindow))
 
 	return s.dataForWriting != nil || s.nextFrame != nil || s.finishedWriting
 }
