@@ -11,6 +11,7 @@ import (
 
 	"github.com/quic-go/quic-go/internal/protocol"
 	"github.com/quic-go/quic-go/internal/qerr"
+	"github.com/quic-go/quic-go/internal/utils"
 	"github.com/quic-go/quic-go/internal/wire"
 
 	"github.com/stretchr/testify/require"
@@ -242,7 +243,7 @@ func testInitialCryptoStreamClientRandomizedSizes(t *testing.T, clientHello []by
 
 	b := slices.Clone(clientHello)
 	for len(b) > 0 {
-		n := min(len(b), mrand.IntN(2*len(b)))
+		n := utils.Min(len(b), mrand.IntN(2*len(b)))
 		_, err := str.Write(b[:n])
 		require.NoError(t, err)
 		b = b[n:]

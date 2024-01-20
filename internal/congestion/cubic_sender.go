@@ -186,7 +186,7 @@ func (c *cubicSender) OnPacketAcked(
 	priorInFlight protocol.ByteCount,
 	eventTime monotime.Time,
 ) {
-	c.largestAckedPacketNumber = max(ackedPacketNumber, c.largestAckedPacketNumber)
+	c.largestAckedPacketNumber = utils.Max(ackedPacketNumber, c.largestAckedPacketNumber)
 	if c.InRecovery() {
 		return
 	}
@@ -257,7 +257,7 @@ func (c *cubicSender) maybeIncreaseCwnd(
 			c.numAckedPackets = 0
 		}
 	} else {
-		c.congestionWindow = min(
+		c.congestionWindow = utils.Min(
 			c.maxCongestionWindow(),
 			c.cubic.CongestionWindowAfterAck(ackedBytes, c.congestionWindow, c.rttStats.MinRTT(), eventTime),
 		)

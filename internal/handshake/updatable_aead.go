@@ -188,7 +188,7 @@ func (a *updatableAEAD) Open(dst, src []byte, rcvTime monotime.Time, pn protocol
 		}
 	}
 	if err == nil {
-		a.highestRcvdPN = max(a.highestRcvdPN, pn)
+		a.highestRcvdPN = utils.Max(a.highestRcvdPN, pn)
 	}
 	return dec, err
 }

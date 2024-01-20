@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/quic-go/quic-go/internal/protocol"
+	"github.com/quic-go/quic-go/internal/utils"
 	"github.com/quic-go/quic-go/quicvarint"
 )
 
@@ -129,7 +130,7 @@ func (f *AckFrame) Append(b []byte, _ protocol.Version) ([]byte, error) {
 	b = quicvarint.Append(b, uint64(f.LargestAcked()))
 	b = quicvarint.Append(b, encodeAckDelay(f.DelayTime))
 
-	numRanges := min(len(f.AckRanges), protocol.MaxNumAckRanges)
+	numRanges := utils.Min(len(f.AckRanges), protocol.MaxNumAckRanges)
 	b = quicvarint.Append(b, uint64(numRanges-1))
 
 	// write the first range
@@ -162,7 +163,7 @@ func (f *AckFrame) Length(_ protocol.Version) protocol.ByteCount {
 	lowestInFirstRange := f.AckRanges[0].Smallest
 	length += quicvarint.Len(uint64(largestAcked - lowestInFirstRange))
 
-	for i := 1; i < min(len(f.AckRanges), protocol.MaxNumAckRanges); i++ {
+	for i := 1; i < utils.Min(len(f.AckRanges), protocol.MaxNumAckRanges); i++ {
 		gap, len := f.encodeAckRange(i)
 		length += quicvarint.Len(gap)
 		length += quicvarint.Len(len)
@@ -190,7 +191,7 @@ func (f *AckFrame) numEncodableAckRanges(maxSize protocol.ByteCount) int {
 	if f.ECT0 > 0 || f.ECT1 > 0 || f.ECNCE > 0 {
 		length += 8 + 8 + 8
 	}
-	numRanges := min(len(f.AckRanges), protocol.MaxNumAckRanges)
+	numRanges := utils.Min(len(f.AckRanges), protocol.MaxNumAckRanges)
 	length += 2 * 8 * (numRanges - 1)
 	if protocol.ByteCount(length) <= maxSize {
 		return numRanges

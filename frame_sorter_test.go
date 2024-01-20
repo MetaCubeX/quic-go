@@ -1575,7 +1575,7 @@ func FuzzFrameSorter(f *testing.F) {
 			cb, tr := getFrameSorterTestCallback(t)
 			callbacks = append(callbacks, tr)
 			require.NoError(t, s.Push(streamData[offset:offset+length], protocol.ByteCount(offset), cb))
-			for i := max(offset, int(readPos)); i < offset+length; i++ {
+			for i := utils.Max(offset, int(readPos)); i < offset+length; i++ {
 				received[i] = true
 			}
 		}

@@ -147,14 +147,14 @@ func (c *streamFlowController) AddBytesSentWithLimiter(
 	if c.bytesSent >= c.sendWindow {
 		return 0, false
 	}
-	n = min(n, c.sendWindow-c.bytesSent)
+	n = utils.Min(n, c.sendWindow-c.bytesSent)
 	added, limited := c.connection.AddBytesSentWithLimiter(n, limiter)
 	c.bytesSent += added
 	return added, limited
 }
 
 func (c *streamFlowController) SendWindowSize() protocol.ByteCount {
-	return min(c.sendWindow-c.bytesSent, c.connection.SendWindowSize())
+	return utils.Min(c.sendWindow-c.bytesSent, c.connection.SendWindowSize())
 }
 
 func (c *streamFlowController) IsNewlyBlocked() bool {

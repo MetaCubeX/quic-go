@@ -12,6 +12,7 @@ import (
 
 	"github.com/quic-go/quic-go/internal/protocol"
 	"github.com/quic-go/quic-go/internal/qerr"
+	"github.com/quic-go/quic-go/internal/utils"
 	"github.com/quic-go/quic-go/quicvarint"
 
 	ossfuzzseeds "github.com/quic-go/go-ossfuzz-seeds"
@@ -21,7 +22,7 @@ import (
 
 func getRandomValueUpTo(max uint64) uint64 {
 	maxVals := []uint64{math.MaxUint8 / 4, math.MaxUint16 / 4, math.MaxUint32 / 4, math.MaxUint64 / 4}
-	return mrand.Uint64N(min(max, maxVals[mrand.IntN(4)]))
+	return mrand.Uint64N(utils.Min(max, maxVals[mrand.IntN(4)]))
 }
 
 func getRandomValue() uint64 { return getRandomValueUpTo(quicvarint.Max) }

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/quic-go/quic-go/internal/protocol"
+	"github.com/quic-go/quic-go/internal/utils"
 	"github.com/quic-go/quic-go/quicvarint"
 	"github.com/stretchr/testify/require"
 )
@@ -375,7 +376,7 @@ func testACKTruncate(t *testing.T, origACK AckFrame) {
 		return ack
 	}
 
-	expectedRanges := min(numRanges, protocol.MaxNumAckRanges)
+	expectedRanges := utils.Min(numRanges, protocol.MaxNumAckRanges)
 
 	ack := cloneACK()
 	l := ack.Length(protocol.Version1)

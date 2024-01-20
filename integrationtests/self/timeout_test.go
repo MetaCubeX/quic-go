@@ -19,6 +19,7 @@ import (
 	"github.com/quic-go/quic-go/qlog"
 	"github.com/quic-go/quic-go/qlogwriter"
 	"github.com/quic-go/quic-go/testutils/simnet"
+	"github.com/quic-go/quic-go/internal/utils"
 
 	"github.com/stretchr/testify/require"
 )
@@ -283,7 +284,7 @@ func TestTimeoutAfterInactivity(t *testing.T) {
 		// and we'd expect to receive an ACK for additional other ack-eliciting packet sent.
 		timeSinceLastAckEliciting := time.Since(lastAckElicitingPacketSentAt)
 		timeSinceLastRcvd := time.Since(lastPacketRcvdAt)
-		require.Equal(t, idleTimeout, max(timeSinceLastAckEliciting, timeSinceLastRcvd))
+		require.Equal(t, idleTimeout, utils.Max(timeSinceLastAckEliciting, timeSinceLastRcvd))
 
 		select {
 		case <-serverConn.Context().Done():

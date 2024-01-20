@@ -9,6 +9,7 @@ import (
 	"github.com/quic-go/quic-go/internal/ackhandler"
 	"github.com/quic-go/quic-go/internal/monotime"
 	"github.com/quic-go/quic-go/internal/protocol"
+	"github.com/quic-go/quic-go/internal/utils"
 	"github.com/quic-go/quic-go/internal/wire"
 )
 
@@ -400,17 +401,17 @@ func (s *SendStream) popNewOrRetransmittedStreamFrame(maxBytes protocol.ByteCoun
 		maxDataLen = s.flowController.SendWindowSize()
 	}
 	if s.resetErr != nil && reliableOffset > 0 {
-		maxDataLen = min(maxDataLen, reliableOffset-s.writeOffset)
+		maxDataLen = utils.Min(maxDataLen, reliableOffset-s.writeOffset)
 	}
 	if s.nextFrame != nil {
-		maxDataLen = min(maxDataLen, s.nextFrame.MaxDataLen(maxBytes, v), s.nextFrame.DataLen())
+		maxDataLen = utils.Min(maxDataLen, utils.Min(s.nextFrame.MaxDataLen(maxBytes, v), s.nextFrame.DataLen()))
 	} else {
 		f := wire.StreamFrame{
 			StreamID:       s.streamID,
 			Offset:         s.writeOffset,
 			DataLenPresent: true,
 		}
-		maxDataLen = min(maxDataLen, f.MaxDataLen(maxBytes, v), protocol.ByteCount(len(s.dataForWriting)))
+		maxDataLen = utils.Min(maxDataLen, utils.Min(f.MaxDataLen(maxBytes, v), protocol.ByteCount(len(s.dataForWriting))))
 	}
 	if maxDataLen == 0 {
 		return nil, nil, true
@@ -584,9 +585,9 @@ func (s *SendStream) SetReliableBoundary() {
 	defer s.mutex.Unlock()
 
 	if s.nextFrame != nil {
-		s.reliableSize = max(s.reliableSize, s.writeOffset+s.nextFrame.DataLen())
+		s.reliableSize = utils.Max(s.reliableSize, s.writeOffset+s.nextFrame.DataLen())
 	} else {
-		s.reliableSize = max(s.reliableSize, s.writeOffset)
+		s.reliableSize = utils.Max(s.reliableSize, s.writeOffset)
 	}
 }
 
@@ -633,9 +634,9 @@ func (s *SendStream) CancelWrite(errorCode StreamErrorCode) {
 	s.ctxCancel(s.resetErr)
 
 	reliableOffset := s.reliableOffset()
-	finalSize := max(s.writeOffset, reliableOffset)
+	finalSize := utils.Max(s.writeOffset, reliableOffset)
 	if s.nextFrameReserved && s.nextFrame != nil {
-		finalSize = max(finalSize, s.nextFrame.Offset+s.nextFrame.DataLen())
+		finalSize = utils.Max(finalSize, s.nextFrame.Offset+s.nextFrame.DataLen())
 	}
 	if reliableOffset == 0 {
 		s.numOutstandingFrames = 0
@@ -719,7 +720,7 @@ func (s *SendStream) handleStopSendingFrame(f *wire.StopSendingFrame) {
 	s.numOutstandingFrames = 0
 	finalSize := s.writeOffset
 	if s.nextFrameReserved && s.nextFrame != nil {
-		finalSize = max(finalSize, s.nextFrame.Offset+s.nextFrame.DataLen())
+		finalSize = utils.Max(finalSize, s.nextFrame.Offset+s.nextFrame.DataLen())
 	}
 	s.returnFramesToPool()
 	if s.resetErr == nil {

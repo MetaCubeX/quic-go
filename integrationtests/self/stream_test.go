@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/quic-go/quic-go"
+	"github.com/quic-go/quic-go/internal/utils"
 	"github.com/quic-go/quic-go/quicvarint"
 
 	"golang.org/x/sync/errgroup"
@@ -50,7 +51,7 @@ func testWriteWithLimitFlowControl(t *testing.T, config *quic.Config) {
 
 	data := GeneratePRData(101)
 	n, err := str.WriteWithLimit(data, func(maxBytes int) int {
-		return min(maxBytes, 25)
+		return utils.Min(maxBytes, 25)
 	})
 	require.Equal(t, 25, n)
 	require.ErrorIs(t, err, quic.ErrWriteLimitReached)

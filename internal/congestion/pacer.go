@@ -6,6 +6,7 @@ import (
 
 	"github.com/quic-go/quic-go/internal/monotime"
 	"github.com/quic-go/quic-go/internal/protocol"
+	"github.com/quic-go/quic-go/internal/utils"
 )
 
 const maxBurstSizePackets = 10
@@ -58,11 +59,11 @@ func (p *pacer) Budget(now monotime.Time) protocol.ByteCount {
 	if added > 0 && budget < p.budgetAtLastSent {
 		budget = protocol.MaxByteCount
 	}
-	return min(p.maxBurstSize(), budget)
+	return utils.Min(p.maxBurstSize(), budget)
 }
 
 func (p *pacer) maxBurstSize() protocol.ByteCount {
-	return max(
+	return utils.Max(
 		p.timeScaledBandwidth(uint64((protocol.MinPacingDelay + protocol.TimerGranularity).Nanoseconds())),
 		maxBurstSizePackets*p.maxDatagramSize,
 	)
@@ -102,7 +103,7 @@ func (p *pacer) TimeUntilSend() monotime.Time {
 	if diff%bw > 0 {
 		d++
 	}
-	return p.lastSentTime.Add(max(protocol.MinPacingDelay, time.Duration(d)*time.Nanosecond))
+	return p.lastSentTime.Add(utils.Max(protocol.MinPacingDelay, time.Duration(d)*time.Nanosecond))
 }
 
 func (p *pacer) SetMaxDatagramSize(s protocol.ByteCount) {

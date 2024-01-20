@@ -81,7 +81,7 @@ func (c *sconn) Write(p []byte, gsoSize uint16, ecn protocol.ECN) error {
 		}
 		// send out the packets one by one
 		for len(p) > 0 {
-			l := min(len(p), int(gsoSize))
+			l := utils.Min(len(p), int(gsoSize))
 			if err := c.writePacket(p[:l], ai.addr, ai.oob, 0, ecn); err != nil {
 				return err
 			}

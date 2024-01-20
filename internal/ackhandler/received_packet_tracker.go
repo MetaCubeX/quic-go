@@ -218,7 +218,7 @@ func (h *appDataReceivedPacketTracker) GetAckFrame(now monotime.Time, onlyIfQueu
 	if ack == nil {
 		return nil
 	}
-	ack.DelayTime = max(0, now.Sub(h.largestObservedRcvdTime))
+	ack.DelayTime = utils.Max(0, now.Sub(h.largestObservedRcvdTime))
 	h.ackQueued = false
 	h.ackAlarm = 0
 	h.ackElicitingPacketsReceivedSinceLastAck = 0

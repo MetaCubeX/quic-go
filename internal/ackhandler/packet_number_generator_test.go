@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/quic-go/quic-go/internal/protocol"
+	"github.com/quic-go/quic-go/internal/utils"
 
 	"github.com/stretchr/testify/require"
 )
@@ -86,7 +87,7 @@ func TestSkippingPacketNumberGeneratorPeriods(t *testing.T) {
 		require.InDelta(t,
 			float64(expectedPeriods[j]+1),
 			average,
-			float64(max(protocol.PacketNumber(5), expectedPeriods[j]/10)),
+			float64(utils.Max(protocol.PacketNumber(5), expectedPeriods[j]/10)),
 		)
 	}
 }

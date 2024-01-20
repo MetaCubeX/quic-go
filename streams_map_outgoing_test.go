@@ -11,6 +11,7 @@ import (
 
 	"github.com/quic-go/quic-go/internal/protocol"
 	"github.com/quic-go/quic-go/internal/qerr"
+	"github.com/quic-go/quic-go/internal/utils"
 	"github.com/quic-go/quic-go/internal/wire"
 
 	"github.com/stretchr/testify/assert"
@@ -531,7 +532,7 @@ func TestStreamsMapOutgoingRandomizedWithCancellation(t *testing.T) {
 			t.Logf("setting stream limit to %d", limit)
 			m.SetMaxStream(limit)
 
-			expectedOpened := int((min(maxStream, limit)-firstStream)/4) + 1
+			expectedOpened := int((utils.Min(maxStream, limit)-firstStream)/4) + 1
 			for len(seen) < expectedOpened {
 				select {
 				case res := <-resultChan:
@@ -540,7 +541,7 @@ func TestStreamsMapOutgoingRandomizedWithCancellation(t *testing.T) {
 					} else {
 						require.NoError(t, res.err)
 						require.NotContains(t, seen, res.str.id)
-						require.LessOrEqual(t, res.str.id, min(maxStream, limit))
+						require.LessOrEqual(t, res.str.id, utils.Min(maxStream, limit))
 						seen[res.str.id] = struct{}{}
 					}
 				case <-time.After(time.Second):

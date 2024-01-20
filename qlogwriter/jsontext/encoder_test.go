@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/quic-go/quic-go/internal/utils"
 	"github.com/quic-go/quic-go/qlogwriter/jsontext"
 
 	"github.com/stretchr/testify/assert"
@@ -241,7 +242,7 @@ type errorWriter struct {
 }
 
 func (w *errorWriter) Write(p []byte) (int, error) {
-	n := min(len(p), w.N)
+	n := utils.Min(len(p), w.N)
 	w.N -= n
 	if w.N <= 0 {
 		return n, assert.AnError

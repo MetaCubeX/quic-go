@@ -70,7 +70,7 @@ func (r *RTTStats) PTO(includeMaxAckDelay bool) time.Duration {
 	if !r.hasMeasurement {
 		return 2 * DefaultInitialRTT
 	}
-	pto := r.SmoothedRTT() + max(4*r.MeanDeviation(), protocol.TimerGranularity)
+	pto := r.SmoothedRTT() + Max(4*r.MeanDeviation(), protocol.TimerGranularity)
 	if includeMaxAckDelay {
 		pto += r.MaxAckDelay()
 	}

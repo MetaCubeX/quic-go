@@ -93,9 +93,9 @@ func (c *connectionFlowController) AddBytesSentWithLimiter(
 	if c.bytesSent >= c.sendWindow {
 		return 0, false
 	}
-	n = min(n, c.sendWindow-c.bytesSent)
-	added := min(
-		max(protocol.ByteCount(limiter(int(n))), 0),
+	n = utils.Min(n, c.sendWindow-c.bytesSent)
+	added := utils.Min(
+		utils.Max(protocol.ByteCount(limiter(int(n))), 0),
 		n,
 	)
 	c.bytesSent += added
@@ -156,7 +156,7 @@ func (c *connectionFlowController) EnsureMinimumWindowSize(inc protocol.ByteCoun
 	if inc <= c.receiveWindowSize {
 		return
 	}
-	newSize := min(inc, c.maxReceiveWindowSize)
+	newSize := utils.Min(inc, c.maxReceiveWindowSize)
 	if delta := newSize - c.receiveWindowSize; delta > 0 && c.allowWindowIncrease(delta) {
 		c.receiveWindowSize = newSize
 		if c.logger.Debug() {

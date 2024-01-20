@@ -1556,7 +1556,7 @@ func testSentPacketHandlerRandomized(t *testing.T, seed uint64) {
 			// acknowledge up to 2 random packet numbers from the pns slice
 			var ackPns []protocol.PacketNumber
 			if len(pns) > 0 {
-				numToAck := min(1+r.IntN(2), len(pns))
+				numToAck := utils.Min(1+r.IntN(2), len(pns))
 				for range numToAck {
 					ackPns = append(ackPns, pns[r.IntN(len(pns))])
 				}

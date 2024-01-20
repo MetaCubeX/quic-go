@@ -5,6 +5,7 @@ import (
 	"iter"
 
 	"github.com/quic-go/quic-go/internal/protocol"
+	"github.com/quic-go/quic-go/internal/utils"
 )
 
 // interval is an interval from one PacketNumber to the other
@@ -124,7 +125,7 @@ func (h *receivedPacketHistory) HighestMissingUpTo(p protocol.PacketNumber) prot
 	if len(h.ranges) == 0 || (h.deletedBelow != protocol.InvalidPacketNumber && p < h.deletedBelow) {
 		return protocol.InvalidPacketNumber
 	}
-	p = min(h.ranges[len(h.ranges)-1].End, p)
+	p = utils.Min(h.ranges[len(h.ranges)-1].End, p)
 	for i := len(h.ranges) - 1; i >= 0; i-- {
 		r := h.ranges[i]
 		if p >= r.Start && p <= r.End { // p is contained in this range

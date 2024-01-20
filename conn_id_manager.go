@@ -80,7 +80,7 @@ func (h *connIDManager) add(f *wire.NewConnectionIDFrame) error {
 	}
 	// If the NEW_CONNECTION_ID frame is reordered, such that its sequence number is smaller than the currently active
 	// connection ID or if it was already retired, send the RETIRE_CONNECTION_ID frame immediately.
-	if f.SequenceNumber < max(h.activeSequenceNumber, h.highestProbingID) || f.SequenceNumber < h.highestRetired {
+	if f.SequenceNumber < utils.Max(h.activeSequenceNumber, h.highestProbingID) || f.SequenceNumber < h.highestRetired {
 		h.queueControlFrame(&wire.RetireConnectionIDFrame{
 			SequenceNumber: f.SequenceNumber,
 		})
@@ -170,7 +170,7 @@ func (h *connIDManager) updateConnectionID() {
 	h.queueControlFrame(&wire.RetireConnectionIDFrame{
 		SequenceNumber: h.activeSequenceNumber,
 	})
-	h.highestRetired = max(h.highestRetired, h.activeSequenceNumber)
+	h.highestRetired = utils.Max(h.highestRetired, h.activeSequenceNumber)
 	if h.activeStatelessResetToken != nil {
 		h.removeStatelessResetToken(*h.activeStatelessResetToken)
 	}

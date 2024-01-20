@@ -10,6 +10,7 @@ import (
 
 	"github.com/quic-go/quic-go/internal/protocol"
 	"github.com/quic-go/quic-go/internal/qerr"
+	"github.com/quic-go/quic-go/internal/utils"
 	"github.com/quic-go/quic-go/internal/wire"
 )
 
@@ -51,7 +52,7 @@ func (s *baseCryptoStream) HandleCryptoFrame(f *wire.CryptoFrame) error {
 		// could e.g. be a retransmission
 		return nil
 	}
-	s.highestOffset = max(s.highestOffset, highestOffset)
+	s.highestOffset = utils.Max(s.highestOffset, highestOffset)
 	return s.queue.Push(f.Data, f.Offset, nil)
 }
 
@@ -84,7 +85,7 @@ func (s *baseCryptoStream) HasData() bool {
 
 func (s *baseCryptoStream) PopCryptoFrame(maxLen protocol.ByteCount) *wire.CryptoFrame {
 	f := &wire.CryptoFrame{Offset: s.writeOffset}
-	n := min(f.MaxDataLen(maxLen), protocol.ByteCount(len(s.writeBuf)))
+	n := utils.Min(f.MaxDataLen(maxLen), protocol.ByteCount(len(s.writeBuf)))
 	if n <= 0 {
 		return nil
 	}
@@ -164,7 +165,7 @@ func (s *initialCryptoStream) Write(p []byte) (int, error) {
 			start := protocol.ByteCount(echPos + 1)
 			s.cuts[1].start = start
 			// cut somewhere (16 bytes), most likely in the ECH extension value
-			s.cuts[1].end = min(start+16, s.end)
+			s.cuts[1].end = utils.Min(start+16, s.end)
 		}
 		slices.SortFunc(s.cuts[:], func(a, b clientHelloCut) int {
 			if a.start == protocol.InvalidByteCount {
@@ -197,7 +198,7 @@ func (s *initialCryptoStream) PopCryptoFrame(maxLen protocol.ByteCount) *wire.Cr
 				break
 			}
 			f = &wire.CryptoFrame{Offset: c.start}
-			n := min(f.MaxDataLen(maxLen), c.end-c.start)
+			n := utils.Min(f.MaxDataLen(maxLen), c.end-c.start)
 			if n <= 0 {
 				return nil
 			}
@@ -233,7 +234,7 @@ func (s *initialCryptoStream) PopCryptoFrame(maxLen protocol.ByteCount) *wire.Cr
 	if maxOffset == protocol.InvalidByteCount {
 		maxOffset = s.end
 	}
-	n := min(f.MaxDataLen(maxLen), maxOffset-s.writeOffset)
+	n := utils.Min(f.MaxDataLen(maxLen), maxOffset-s.writeOffset)
 	if n <= 0 {
 		return nil
 	}
