@@ -88,12 +88,12 @@ var _ = Describe("MTU Discoverer", func() {
 		const rep = 3000
 		var maxDiff protocol.ByteCount
 		for i := 0; i < rep; i++ {
-			maxMTU := protocol.ByteCount(rand.Intn(int(3000-startMTU))) + startMTU + 1
+			max := protocol.ByteCount(rand.Intn(int(3000-startMTU))) + startMTU + 1
 			currentMTU := startMTU
 			d := newMTUDiscoverer(rttStats, startMTU, func(s protocol.ByteCount) { currentMTU = s })
-			d.Start(maxMTU)
+			d.Start(max)
 			now := time.Now()
-			realMTU := protocol.ByteCount(rand.Intn(int(maxMTU-startMTU))) + startMTU
+			realMTU := protocol.ByteCount(rand.Intn(int(max-startMTU))) + startMTU
 			t := now.Add(mtuProbeDelay * rtt)
 			var count int
 			for d.ShouldSendProbe(t) {
@@ -112,7 +112,7 @@ var _ = Describe("MTU Discoverer", func() {
 			}
 			diff := realMTU - currentMTU
 			Expect(diff).To(BeNumerically(">=", 0))
-			maxDiff = max(maxDiff, diff)
+			maxDiff = utils.Max(maxDiff, diff)
 		}
 		Expect(maxDiff).To(BeEquivalentTo(maxMTUDiff))
 	})
