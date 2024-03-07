@@ -634,6 +634,12 @@ func (mr *MockQUICConnMockRecorder) SetCongestionControl(arg0 any) *MockQUICConn
 	return &MockQUICConnSetCongestionControlCall{Call: call}
 }
 
+// SetRemoteAddr mocks base method.
+func (m *MockQUICConn) SetRemoteAddr(arg0 net.Addr) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetRemoteAddr", arg0)
+}
+
 // MockQUICConnSetCongestionControlCall wrap *gomock.Call
 type MockQUICConnSetCongestionControlCall struct {
 	*gomock.Call
