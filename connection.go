@@ -2411,3 +2411,7 @@ func (s *connection) NextConnection() Connection {
 func (s *connection) SetCongestionControl(cc congestion.CongestionControl) {
 	s.sentPacketHandler.SetCongestionControl(cc)
 }
+
+func (s *connection) SetRemoteAddr(addr net.Addr) {
+	s.conn.SetRemoteAddr(addr)
+}
