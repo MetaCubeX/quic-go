@@ -47,6 +47,12 @@ func (m *MockSendConn) ChangeRemoteAddr(addr net.Addr, info packetInfo) {
 	m.ctrl.Call(m, "ChangeRemoteAddr", addr, info)
 }
 
+// ChangeRemoteAddr mocks base method.
+func (m *MockSendConn) SetRemoteAddr(addr net.Addr) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetRemoteAddr", addr)
+}
+
 // ChangeRemoteAddr indicates an expected call of ChangeRemoteAddr.
 func (mr *MockSendConnMockRecorder) ChangeRemoteAddr(addr, info any) *MockSendConnChangeRemoteAddrCall {
 	mr.mock.ctrl.T.Helper()
