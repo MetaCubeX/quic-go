@@ -67,11 +67,6 @@ type DatagramTooLargeError struct {
 	PeerMaxDatagramFrameSize int64
 }
 
-func (e *DatagramTooLargeError) Is(target error) bool {
-	_, ok := target.(*DatagramTooLargeError)
-	return ok
-}
-
 func (e *DatagramTooLargeError) Error() string {
 	return fmt.Sprintf("DATAGRAM frame too large (maximum: %d bytes)", e.PeerMaxDatagramFrameSize)
 }
