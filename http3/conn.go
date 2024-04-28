@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log/slog"
+	"golang.org/x/exp/slog"
 	"net"
 	"net/http"
 	"sync"
