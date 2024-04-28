@@ -3,7 +3,7 @@ package http3
 import (
 	"bytes"
 	"fmt"
-	"log/slog"
+	"golang.org/x/exp/slog"
 	"net/http"
 	"strconv"
 	"strings"
