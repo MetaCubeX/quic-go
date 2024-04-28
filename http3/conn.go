@@ -3,7 +3,7 @@ package http3
 import (
 	"context"
 	"fmt"
-	"log/slog"
+	"golang.org/x/exp/slog"
 	"net"
 	"sync"
 	"sync/atomic"
