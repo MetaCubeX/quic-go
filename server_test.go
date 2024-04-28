@@ -301,7 +301,7 @@ var _ = Describe("Server", func() {
 					_ *handshake.TokenGenerator,
 					_ bool,
 					_ *logging.ConnectionTracer,
-					_ uint64,
+					_ ConnectionTracingID,
 					_ utils.Logger,
 					_ protocol.Version,
 				) quicConn {
@@ -503,7 +503,7 @@ var _ = Describe("Server", func() {
 					_ *handshake.TokenGenerator,
 					_ bool,
 					_ *logging.ConnectionTracer,
-					_ uint64,
+					_ ConnectionTracingID,
 					_ utils.Logger,
 					_ protocol.Version,
 				) quicConn {
@@ -571,7 +571,7 @@ var _ = Describe("Server", func() {
 					_ *handshake.TokenGenerator,
 					_ bool,
 					_ *logging.ConnectionTracer,
-					_ uint64,
+					_ ConnectionTracingID,
 					_ utils.Logger,
 					_ protocol.Version,
 				) quicConn {
@@ -626,7 +626,7 @@ var _ = Describe("Server", func() {
 					_ *handshake.TokenGenerator,
 					_ bool,
 					_ *logging.ConnectionTracer,
-					_ uint64,
+					_ ConnectionTracingID,
 					_ utils.Logger,
 					_ protocol.Version,
 				) quicConn {
@@ -675,7 +675,7 @@ var _ = Describe("Server", func() {
 					_ *handshake.TokenGenerator,
 					_ bool,
 					_ *logging.ConnectionTracer,
-					_ uint64,
+					_ ConnectionTracingID,
 					_ utils.Logger,
 					_ protocol.Version,
 				) quicConn {
@@ -736,7 +736,7 @@ var _ = Describe("Server", func() {
 					_ *handshake.TokenGenerator,
 					_ bool,
 					_ *logging.ConnectionTracer,
-					_ uint64,
+					_ ConnectionTracingID,
 					_ utils.Logger,
 					_ protocol.Version,
 				) quicConn {
@@ -969,7 +969,7 @@ var _ = Describe("Server", func() {
 					_ *handshake.TokenGenerator,
 					_ bool,
 					_ *logging.ConnectionTracer,
-					_ uint64,
+					_ ConnectionTracingID,
 					_ utils.Logger,
 					_ protocol.Version,
 				) quicConn {
@@ -1036,7 +1036,7 @@ var _ = Describe("Server", func() {
 					_ *handshake.TokenGenerator,
 					_ bool,
 					_ *logging.ConnectionTracer,
-					_ uint64,
+					_ ConnectionTracingID,
 					_ utils.Logger,
 					_ protocol.Version,
 				) quicConn {
@@ -1106,7 +1106,7 @@ var _ = Describe("Server", func() {
 					_ *handshake.TokenGenerator,
 					_ bool,
 					_ *logging.ConnectionTracer,
-					_ uint64,
+					_ ConnectionTracingID,
 					_ utils.Logger,
 					_ protocol.Version,
 				) quicConn {
@@ -1176,7 +1176,7 @@ var _ = Describe("Server", func() {
 				_ *handshake.TokenGenerator,
 				_ bool,
 				_ *logging.ConnectionTracer,
-				_ uint64,
+				_ ConnectionTracingID,
 				_ utils.Logger,
 				_ protocol.Version,
 			) quicConn {
@@ -1201,7 +1201,7 @@ var _ = Describe("Server", func() {
 		It("rejects new connection attempts if the accept queue is full", func() {
 			connChan := make(chan *MockQUICConn, 1)
 			var wg sync.WaitGroup // to make sure the test fully completes
-			wg.Add(protocol.MaxAcceptQueueSize + 1)
+			wg.Add(protocol.MaxAcceptQueueSize)
 			serv.baseServer.newConn = func(
 				_ sendConn,
 				runner connRunner,
@@ -1217,16 +1217,15 @@ var _ = Describe("Server", func() {
 				_ *handshake.TokenGenerator,
 				_ bool,
 				_ *logging.ConnectionTracer,
-				_ uint64,
+				_ ConnectionTracingID,
 				_ utils.Logger,
 				_ protocol.Version,
 			) quicConn {
-				defer wg.Done()
 				ready := make(chan struct{})
 				close(ready)
 				conn := <-connChan
 				conn.EXPECT().handlePacket(gomock.Any())
-				conn.EXPECT().run()
+				conn.EXPECT().run().Do(func() error { wg.Done(); return nil })
 				conn.EXPECT().earlyConnReady().Return(ready)
 				conn.EXPECT().Context().Return(context.Background())
 				return conn
@@ -1242,14 +1241,19 @@ var _ = Describe("Server", func() {
 			}
 
 			Eventually(serv.baseServer.connQueue).Should(HaveLen(protocol.MaxAcceptQueueSize))
+			wg.Wait()
+			wg.Add(1)
 
+			rejected := make(chan struct{})
 			phm.EXPECT().GetStatelessResetToken(gomock.Any())
 			phm.EXPECT().AddWithConnID(gomock.Any(), gomock.Any(), gomock.Any()).Return(true)
 			conn := NewMockQUICConn(mockCtrl)
-			conn.EXPECT().closeWithTransportError(ConnectionRefused)
+			conn.EXPECT().closeWithTransportError(ConnectionRefused).Do(func(qerr.TransportErrorCode) {
+				close(rejected)
+			})
 			connChan <- conn
 			serv.baseServer.handlePacket(getInitialWithRandomDestConnID())
-			wg.Wait()
+			Eventually(rejected).Should(BeClosed())
 		})
 
 		It("doesn't accept new connections if they were closed in the mean time", func() {
@@ -1272,7 +1276,7 @@ var _ = Describe("Server", func() {
 				_ *handshake.TokenGenerator,
 				_ bool,
 				_ *logging.ConnectionTracer,
-				_ uint64,
+				_ ConnectionTracingID,
 				_ utils.Logger,
 				_ protocol.Version,
 			) quicConn {
@@ -1394,7 +1398,7 @@ var _ = Describe("Server", func() {
 				_ *handshake.TokenGenerator,
 				_ bool,
 				_ *logging.ConnectionTracer,
-				_ uint64,
+				_ ConnectionTracingID,
 				_ utils.Logger,
 				_ protocol.Version,
 			) quicConn {

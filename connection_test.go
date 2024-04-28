@@ -2477,6 +2477,40 @@ var _ = Describe("Connection", func() {
 		})
 	})
 
+	Context("datagrams", func() {
+		It("doesn't allow datagrams if the peer didn't enable support", func() {
+			conn.peerParams = &wire.TransportParameters{MaxDatagramFrameSize: 0}
+			Expect(conn.SendDatagram(make([]byte, 200))).To(MatchError("datagram support disabled"))
+		})
+
+		It("sends a datagram", func() {
+			conn.peerParams = &wire.TransportParameters{MaxDatagramFrameSize: 1000}
+			Expect(conn.SendDatagram([]byte("foobar"))).To(Succeed())
+			f := conn.datagramQueue.Peek()
+			Expect(f).ToNot(BeNil())
+			Expect(f.Data).To(Equal([]byte("foobar")))
+		})
+
+		It("says when a datagram is too big", func() {
+			conn.peerParams = &wire.TransportParameters{MaxDatagramFrameSize: 1000}
+			err := conn.SendDatagram(make([]byte, 2000))
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(BeAssignableToTypeOf(&DatagramTooLargeError{}))
+			derr := err.(*DatagramTooLargeError)
+			Expect(derr.MaxDatagramPayloadSize).To(BeNumerically("<", 1000))
+			fmt.Println(derr.MaxDatagramPayloadSize)
+			Expect(conn.SendDatagram(make([]byte, derr.MaxDatagramPayloadSize))).To(Succeed())
+		})
+
+		It("receives datagrams", func() {
+			conn.config.EnableDatagrams = true
+			conn.datagramQueue.HandleDatagramFrame(&wire.DatagramFrame{Data: []byte("foobar")})
+			data, err := conn.ReceiveDatagram(context.Background())
+			Expect(err).ToNot(HaveOccurred())
+			Expect(data).To(Equal([]byte("foobar")))
+		})
+	})
+
 	It("returns the local address", func() {
 		Expect(conn.LocalAddr()).To(Equal(localAddr))
 	})
@@ -3167,7 +3201,7 @@ var _ = Describe("Client Connection", func() {
 		// the connection to immediately break down
 		It("fails on Initial-level ACK for unsent packet", func() {
 			ack := &wire.AckFrame{AckRanges: []wire.AckRange{{Smallest: 2, Largest: 2}}}
-			initialPacket := testutils.ComposeInitialPacket(destConnID, srcConnID, destConnID, []wire.Frame{ack}, protocol.PerspectiveServer, conn.version)
+			initialPacket := testutils.ComposeInitialPacket(destConnID, srcConnID, destConnID, nil, []wire.Frame{ack}, protocol.PerspectiveServer, conn.version)
 			tracer.EXPECT().ReceivedLongHeaderPacket(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
 			Expect(conn.handlePacketImpl(wrapPacket(initialPacket))).To(BeFalse())
 		})
@@ -3179,7 +3213,7 @@ var _ = Describe("Client Connection", func() {
 				IsApplicationError: true,
 				ReasonPhrase:       "mitm attacker",
 			}
-			initialPacket := testutils.ComposeInitialPacket(destConnID, srcConnID, destConnID, []wire.Frame{connCloseFrame}, protocol.PerspectiveServer, conn.version)
+			initialPacket := testutils.ComposeInitialPacket(destConnID, srcConnID, destConnID, nil, []wire.Frame{connCloseFrame}, protocol.PerspectiveServer, conn.version)
 			tracer.EXPECT().ReceivedLongHeaderPacket(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
 			Expect(conn.handlePacketImpl(wrapPacket(initialPacket))).To(BeTrue())
 		})
@@ -3197,7 +3231,7 @@ var _ = Describe("Client Connection", func() {
 
 			tracer.EXPECT().ReceivedRetry(gomock.Any())
 			conn.handlePacketImpl(wrapPacket(testutils.ComposeRetryPacket(newSrcConnID, destConnID, destConnID, []byte("foobar"), conn.version)))
-			initialPacket := testutils.ComposeInitialPacket(conn.connIDManager.Get(), srcConnID, conn.connIDManager.Get(), nil, protocol.PerspectiveServer, conn.version)
+			initialPacket := testutils.ComposeInitialPacket(conn.connIDManager.Get(), srcConnID, conn.connIDManager.Get(), nil, nil, protocol.PerspectiveServer, conn.version)
 			tracer.EXPECT().DroppedPacket(gomock.Any(), protocol.InvalidPacketNumber, gomock.Any(), gomock.Any())
 			Expect(conn.handlePacketImpl(wrapPacket(initialPacket))).To(BeFalse())
 		})

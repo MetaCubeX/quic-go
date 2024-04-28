@@ -114,8 +114,8 @@ func (e *errCloseForRecreating) Error() string {
 	return "closing connection in order to recreate it"
 }
 
-var connTracingID uint64        // to be accessed atomically
-func nextConnTracingID() uint64 { return atomic.AddUint64(&connTracingID, 1) }
+var connTracingID atomic.Uint64              // to be accessed atomically
+func nextConnTracingID() ConnectionTracingID { return ConnectionTracingID(connTracingID.Add(1)) }
 
 // A Connection is a QUIC connection
 type connection struct {
@@ -235,7 +235,7 @@ var newConnection = func(
 	tokenGenerator *handshake.TokenGenerator,
 	clientAddressValidated bool,
 	tracer *logging.ConnectionTracer,
-	tracingID uint64,
+	tracingID ConnectionTracingID,
 	logger utils.Logger,
 	v protocol.Version,
 ) quicConn {
@@ -273,8 +273,8 @@ var newConnection = func(
 		s.queueControlFrame,
 		connIDGenerator,
 	)
-	s.preSetup()
 	s.ctx, s.ctxCancel = context.WithCancelCause(context.WithValue(context.Background(), ConnectionTracingKey, tracingID))
+	s.preSetup()
 	s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewAckHandler(
 		0,
 		getMaxPacketSize(s.conn.RemoteAddr()),
@@ -348,7 +348,7 @@ var newClientConnection = func(
 	enable0RTT bool,
 	hasNegotiatedVersion bool,
 	tracer *logging.ConnectionTracer,
-	tracingID uint64,
+	tracingID ConnectionTracingID,
 	logger utils.Logger,
 	v protocol.Version,
 ) quicConn {
@@ -382,8 +382,8 @@ var newClientConnection = func(
 		s.queueControlFrame,
 		connIDGenerator,
 	)
-	s.preSetup()
 	s.ctx, s.ctxCancel = context.WithCancelCause(context.WithValue(context.Background(), ConnectionTracingKey, tracingID))
+	s.preSetup()
 	s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewAckHandler(
 		initialPacketNumber,
 		getMaxPacketSize(s.conn.RemoteAddr()),
@@ -472,6 +472,7 @@ func (s *connection) preSetup() {
 	)
 	s.earlyConnReadyChan = make(chan struct{})
 	s.streamsMap = newStreamsMap(
+		s.ctx,
 		s,
 		s.newFlowController,
 		uint64(s.config.MaxIncomingStreams),
@@ -2366,9 +2367,7 @@ func (s *connection) SendDatagram(p []byte) error {
 	f := &wire.DatagramFrame{DataLenPresent: true}
 	maxDataLen := f.MaxDataLen(s.peerParams.MaxDatagramFrameSize, s.version)
 	if protocol.ByteCount(len(p)) > maxDataLen {
-		return &DatagramTooLargeError{
-			PeerMaxDatagramFrameSize: int64(maxDataLen),
-		}
+		return &DatagramTooLargeError{MaxDatagramPayloadSize: int64(maxDataLen)}
 	}
 	f.Data = make([]byte, len(p))
 	copy(f.Data, p)
