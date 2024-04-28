@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/quic-go/quic-go"
+	"github.com/metacubex/quic-go"
 )
 
 type streamState uint8
