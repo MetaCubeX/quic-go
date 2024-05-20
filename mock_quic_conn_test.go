@@ -639,6 +639,14 @@ func (m *MockQUICConn) SetRemoteAddr(arg0 net.Addr) {
 	m.ctrl.Call(m, "SetRemoteAddr", arg0)
 }
 
+// Config mocks base method.
+func (m *MockQUICConn) Config() *Config {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Config")
+	ret0, _ := ret[0].(*Config)
+	return ret0
+}
+
 // MockQUICConnSetCongestionControlCall wrap *gomock.Call
 type MockQUICConnSetCongestionControlCall struct {
 	*gomock.Call
