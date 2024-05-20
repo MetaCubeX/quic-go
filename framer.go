@@ -1,7 +1,7 @@
 package quic
 
 import (
-	"slices"
+	"golang.org/x/exp/slices"
 	"sync"
 	"time"
 
