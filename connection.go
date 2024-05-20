@@ -2465,3 +2465,7 @@ func (s *connection) SetCongestionControl(cc congestion.CongestionControl) {
 func (s *connection) SetRemoteAddr(addr net.Addr) {
 	s.conn.SetRemoteAddr(addr)
 }
+
+func (s *connection) Config() *Config {
+	return s.config
+}
