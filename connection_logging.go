@@ -1,7 +1,7 @@
 package quic
 
 import (
-	"slices"
+	"golang.org/x/exp/slices"
 
 	"github.com/quic-go/quic-go/internal/ackhandler"
 	"github.com/quic-go/quic-go/internal/protocol"
