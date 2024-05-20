@@ -667,6 +667,14 @@ func (m *MockQUICConn) SetRemoteAddr(arg0 net.Addr) {
 	m.ctrl.Call(m, "SetRemoteAddr", arg0)
 }
 
+// Config mocks base method.
+func (m *MockQUICConn) Config() *Config {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Config")
+	ret0, _ := ret[0].(*Config)
+	return ret0
+}
+
 // SetCongestionControl indicates an expected call of SetCongestionControl.
 func (mr *MockQUICConnMockRecorder) SetCongestionControl(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
