@@ -5,9 +5,9 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"golang.org/x/exp/slices"
 	"io"
 	"net/netip"
-	"slices"
 	"time"
 
 	"github.com/quic-go/quic-go/internal/protocol"
