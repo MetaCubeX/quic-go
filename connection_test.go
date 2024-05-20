@@ -54,14 +54,21 @@ var _ = Describe("Connection", func() {
 	destConnID := protocol.ParseConnectionID([]byte{8, 7, 6, 5, 4, 3, 2, 1})
 	clientDestConnID := protocol.ParseConnectionID([]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
 
-	getCoalescedPacket := func(pn protocol.PacketNumber, isLongHeader bool) *coalescedPacket {
+	getCoalescedPacket := func(pn protocol.PacketNumber, encLevel protocol.EncryptionLevel) *coalescedPacket {
 		buffer := getPacketBuffer()
 		buffer.Data = append(buffer.Data, []byte("foobar")...)
 		packet := &coalescedPacket{buffer: buffer}
-		if isLongHeader {
+		if encLevel != protocol.Encryption1RTT {
+			var typ protocol.PacketType
+			switch encLevel {
+			case protocol.EncryptionInitial:
+				typ = protocol.PacketTypeInitial
+			case protocol.EncryptionHandshake:
+				typ = protocol.PacketTypeHandshake
+			}
 			packet.longHdrPackets = []*longHeaderPacket{{
 				header: &wire.ExtendedHeader{
-					Header:       wire.Header{},
+					Header:       wire.Header{Type: typ},
 					PacketNumber: pn,
 				},
 				length: 6, // foobar
@@ -1305,7 +1312,6 @@ var _ = Describe("Connection", func() {
 				var getFrame func(protocol.ByteCount, protocol.Version) wire.Frame
 
 				BeforeEach(func() {
-					//nolint:exhaustive
 					switch encLevel {
 					case protocol.EncryptionInitial:
 						sendMode = ackhandler.SendPTOInitial
@@ -1326,14 +1332,14 @@ var _ = Describe("Connection", func() {
 					sph.EXPECT().SendMode(gomock.Any()).Return(ackhandler.SendNone)
 					sph.EXPECT().QueueProbePacket(encLevel)
 					sph.EXPECT().ECNMode(gomock.Any())
-					p := getCoalescedPacket(123, enc != protocol.Encryption1RTT)
+					p := getCoalescedPacket(123, encLevel)
 					packer.EXPECT().MaybePackProbePacket(encLevel, gomock.Any(), conn.version).Return(p, nil)
 					sph.EXPECT().SentPacket(gomock.Any(), protocol.PacketNumber(123), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
 					conn.sentPacketHandler = sph
 					runConn()
 					sent := make(chan struct{})
 					sender.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any()).Do(func(*packetBuffer, uint16, protocol.ECN) { close(sent) })
-					if enc == protocol.Encryption1RTT {
+					if encLevel == protocol.Encryption1RTT {
 						tracer.EXPECT().SentShortHeaderPacket(gomock.Any(), p.shortHdrPacket.Length, gomock.Any(), gomock.Any(), gomock.Any())
 					} else {
 						tracer.EXPECT().SentLongHeaderPacket(gomock.Any(), p.longHdrPackets[0].length, gomock.Any(), gomock.Any(), gomock.Any())
@@ -1349,13 +1355,13 @@ var _ = Describe("Connection", func() {
 					sph.EXPECT().SendMode(gomock.Any()).Return(ackhandler.SendNone)
 					sph.EXPECT().ECNMode(gomock.Any()).Return(protocol.ECT0)
 					sph.EXPECT().QueueProbePacket(encLevel).Return(false)
-					p := getCoalescedPacket(123, enc != protocol.Encryption1RTT)
+					p := getCoalescedPacket(123, encLevel)
 					packer.EXPECT().MaybePackProbePacket(encLevel, gomock.Any(), conn.version).Return(p, nil)
 					sph.EXPECT().SentPacket(gomock.Any(), protocol.PacketNumber(123), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
 					runConn()
 					sent := make(chan struct{})
 					sender.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any()).Do(func(*packetBuffer, uint16, protocol.ECN) { close(sent) })
-					if enc == protocol.Encryption1RTT {
+					if encLevel == protocol.Encryption1RTT {
 						tracer.EXPECT().SentShortHeaderPacket(gomock.Any(), p.shortHdrPacket.Length, logging.ECT0, gomock.Any(), gomock.Any())
 					} else {
 						tracer.EXPECT().SentLongHeaderPacket(gomock.Any(), p.longHdrPackets[0].length, logging.ECT0, gomock.Any(), gomock.Any())
@@ -1433,15 +1439,15 @@ var _ = Describe("Connection", func() {
 			sph.EXPECT().SentPacket(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(2)
 			sph.EXPECT().ECNMode(true).Return(protocol.ECT1).Times(4)
 			sph.EXPECT().SendMode(gomock.Any()).Return(ackhandler.SendAny).Times(3)
-			payload1 := make([]byte, conn.mtuDiscoverer.CurrentSize())
+			payload1 := make([]byte, conn.maxPacketSize())
 			rand.Read(payload1)
-			payload2 := make([]byte, conn.mtuDiscoverer.CurrentSize())
+			payload2 := make([]byte, conn.maxPacketSize())
 			rand.Read(payload2)
 			expectAppendPacket(packer, shortHeaderPacket{PacketNumber: 10}, payload1)
 			expectAppendPacket(packer, shortHeaderPacket{PacketNumber: 11}, payload2)
 			packer.EXPECT().AppendPacket(gomock.Any(), gomock.Any(), gomock.Any()).Return(shortHeaderPacket{}, errNothingToPack)
 			sender.EXPECT().WouldBlock().AnyTimes()
-			sender.EXPECT().Send(gomock.Any(), uint16(conn.mtuDiscoverer.CurrentSize()), gomock.Any()).Do(func(b *packetBuffer, _ uint16, _ protocol.ECN) {
+			sender.EXPECT().Send(gomock.Any(), uint16(conn.maxPacketSize()), gomock.Any()).Do(func(b *packetBuffer, _ uint16, _ protocol.ECN) {
 				Expect(b.Data).To(Equal(append(payload1, payload2...)))
 			})
 			go func() {
@@ -1460,20 +1466,20 @@ var _ = Describe("Connection", func() {
 			sph.EXPECT().SendMode(gomock.Any()).Return(ackhandler.SendAny).Times(3)
 			sph.EXPECT().SendMode(gomock.Any()).Return(ackhandler.SendNone)
 			sph.EXPECT().ECNMode(true).Times(4)
-			payload1 := make([]byte, conn.mtuDiscoverer.CurrentSize())
+			payload1 := make([]byte, conn.maxPacketSize())
 			rand.Read(payload1)
-			payload2 := make([]byte, conn.mtuDiscoverer.CurrentSize()-1)
+			payload2 := make([]byte, conn.maxPacketSize()-1)
 			rand.Read(payload2)
-			payload3 := make([]byte, conn.mtuDiscoverer.CurrentSize())
+			payload3 := make([]byte, conn.maxPacketSize())
 			rand.Read(payload3)
 			expectAppendPacket(packer, shortHeaderPacket{PacketNumber: 10}, payload1)
 			expectAppendPacket(packer, shortHeaderPacket{PacketNumber: 11}, payload2)
 			expectAppendPacket(packer, shortHeaderPacket{PacketNumber: 12}, payload3)
 			sender.EXPECT().WouldBlock().AnyTimes()
-			sender.EXPECT().Send(gomock.Any(), uint16(conn.mtuDiscoverer.CurrentSize()), gomock.Any()).Do(func(b *packetBuffer, _ uint16, _ protocol.ECN) {
+			sender.EXPECT().Send(gomock.Any(), uint16(conn.maxPacketSize()), gomock.Any()).Do(func(b *packetBuffer, _ uint16, _ protocol.ECN) {
 				Expect(b.Data).To(Equal(append(payload1, payload2...)))
 			})
-			sender.EXPECT().Send(gomock.Any(), uint16(conn.mtuDiscoverer.CurrentSize()), gomock.Any()).Do(func(b *packetBuffer, _ uint16, _ protocol.ECN) {
+			sender.EXPECT().Send(gomock.Any(), uint16(conn.maxPacketSize()), gomock.Any()).Do(func(b *packetBuffer, _ uint16, _ protocol.ECN) {
 				Expect(b.Data).To(Equal(payload3))
 			})
 			go func() {
@@ -1493,20 +1499,20 @@ var _ = Describe("Connection", func() {
 			sph.EXPECT().SendMode(gomock.Any()).Return(ackhandler.SendNone)
 			sph.EXPECT().ECNMode(true).Return(protocol.ECT1).Times(2)
 			sph.EXPECT().ECNMode(true).Return(protocol.ECT0).Times(2)
-			payload1 := make([]byte, conn.mtuDiscoverer.CurrentSize())
+			payload1 := make([]byte, conn.maxPacketSize())
 			rand.Read(payload1)
-			payload2 := make([]byte, conn.mtuDiscoverer.CurrentSize())
+			payload2 := make([]byte, conn.maxPacketSize())
 			rand.Read(payload2)
-			payload3 := make([]byte, conn.mtuDiscoverer.CurrentSize())
+			payload3 := make([]byte, conn.maxPacketSize())
 			rand.Read(payload3)
 			expectAppendPacket(packer, shortHeaderPacket{PacketNumber: 10}, payload1)
 			expectAppendPacket(packer, shortHeaderPacket{PacketNumber: 11}, payload2)
 			expectAppendPacket(packer, shortHeaderPacket{PacketNumber: 11}, payload3)
 			sender.EXPECT().WouldBlock().AnyTimes()
-			sender.EXPECT().Send(gomock.Any(), uint16(conn.mtuDiscoverer.CurrentSize()), gomock.Any()).Do(func(b *packetBuffer, _ uint16, _ protocol.ECN) {
+			sender.EXPECT().Send(gomock.Any(), uint16(conn.maxPacketSize()), gomock.Any()).Do(func(b *packetBuffer, _ uint16, _ protocol.ECN) {
 				Expect(b.Data).To(Equal(append(payload1, payload2...)))
 			})
-			sender.EXPECT().Send(gomock.Any(), uint16(conn.mtuDiscoverer.CurrentSize()), gomock.Any()).Do(func(b *packetBuffer, _ uint16, _ protocol.ECN) {
+			sender.EXPECT().Send(gomock.Any(), uint16(conn.maxPacketSize()), gomock.Any()).Do(func(b *packetBuffer, _ uint16, _ protocol.ECN) {
 				Expect(b.Data).To(Equal(payload3))
 			})
 			go func() {
@@ -2498,7 +2504,6 @@ var _ = Describe("Connection", func() {
 			Expect(err).To(BeAssignableToTypeOf(&DatagramTooLargeError{}))
 			derr := err.(*DatagramTooLargeError)
 			Expect(derr.MaxDatagramPayloadSize).To(BeNumerically("<", 1000))
-			fmt.Println(derr.MaxDatagramPayloadSize)
 			Expect(conn.SendDatagram(make([]byte, derr.MaxDatagramPayloadSize))).To(Succeed())
 		})
 

@@ -154,7 +154,9 @@ type connection struct {
 	unpacker      unpacker
 	frameParser   wire.FrameParser
 	packer        packer
-	mtuDiscoverer mtuDiscoverer // initialized when the handshake completes
+	mtuDiscoverer mtuDiscoverer // initialized when the transport parameters are received
+
+	maxPayloadSizeEstimate atomic.Uint32
 
 	initialStream       cryptoStream
 	handshakeStream     cryptoStream
@@ -277,7 +279,7 @@ var newConnection = func(
 	s.preSetup()
 	s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewAckHandler(
 		0,
-		getMaxPacketSize(s.conn.RemoteAddr()),
+		protocol.ByteCount(s.config.InitialPacketSize),
 		s.rttStats,
 		clientAddressValidated,
 		s.conn.capabilities().ECN,
@@ -285,7 +287,7 @@ var newConnection = func(
 		s.tracer,
 		s.logger,
 	)
-	s.mtuDiscoverer = newMTUDiscoverer(s.rttStats, getMaxPacketSize(s.conn.RemoteAddr()), s.sentPacketHandler.SetMaxDatagramSize)
+	s.maxPayloadSizeEstimate.Store(uint32(estimateMaxPayloadSize(protocol.ByteCount(s.config.InitialPacketSize))))
 	params := &wire.TransportParameters{
 		InitialMaxStreamDataBidiLocal:   protocol.ByteCount(s.config.InitialStreamReceiveWindow),
 		InitialMaxStreamDataBidiRemote:  protocol.ByteCount(s.config.InitialStreamReceiveWindow),
@@ -296,6 +298,7 @@ var newConnection = func(
 		MaxUniStreamNum:                 protocol.StreamNum(s.config.MaxIncomingUniStreams),
 		MaxAckDelay:                     protocol.MaxAckDelayInclGranularity,
 		AckDelayExponent:                protocol.AckDelayExponent,
+		MaxUDPPayloadSize:               protocol.MaxPacketBufferSize,
 		DisableActiveMigration:          true,
 		StatelessResetToken:             &statelessResetToken,
 		OriginalDestinationConnectionID: origDestConnID,
@@ -386,7 +389,7 @@ var newClientConnection = func(
 	s.preSetup()
 	s.sentPacketHandler, s.receivedPacketHandler = ackhandler.NewAckHandler(
 		initialPacketNumber,
-		getMaxPacketSize(s.conn.RemoteAddr()),
+		protocol.ByteCount(s.config.InitialPacketSize),
 		s.rttStats,
 		false, // has no effect
 		s.conn.capabilities().ECN,
@@ -394,7 +397,7 @@ var newClientConnection = func(
 		s.tracer,
 		s.logger,
 	)
-	s.mtuDiscoverer = newMTUDiscoverer(s.rttStats, getMaxPacketSize(s.conn.RemoteAddr()), s.sentPacketHandler.SetMaxDatagramSize)
+	s.maxPayloadSizeEstimate.Store(uint32(estimateMaxPayloadSize(protocol.ByteCount(s.config.InitialPacketSize))))
 	oneRTTStream := newCryptoStream()
 	params := &wire.TransportParameters{
 		InitialMaxStreamDataBidiRemote: protocol.ByteCount(s.config.InitialStreamReceiveWindow),
@@ -405,6 +408,7 @@ var newClientConnection = func(
 		MaxBidiStreamNum:               protocol.StreamNum(s.config.MaxIncomingStreams),
 		MaxUniStreamNum:                protocol.StreamNum(s.config.MaxIncomingUniStreams),
 		MaxAckDelay:                    protocol.MaxAckDelayInclGranularity,
+		MaxUDPPayloadSize:              protocol.MaxPacketBufferSize,
 		AckDelayExponent:               protocol.AckDelayExponent,
 		DisableActiveMigration:         true,
 		// For interoperability with quic-go versions before May 2023, this value must be set to a value
@@ -782,11 +786,7 @@ func (s *connection) handleHandshakeConfirmed() error {
 	s.cryptoStreamHandler.SetHandshakeConfirmed()
 
 	if !s.config.DisablePathMTUDiscovery && s.conn.capabilities().DF {
-		maxPacketSize := s.peerParams.MaxUDPPayloadSize
-		if maxPacketSize == 0 {
-			maxPacketSize = protocol.MaxByteCount
-		}
-		s.mtuDiscoverer.Start(min(maxPacketSize, protocol.MaxPacketBufferSize))
+		s.mtuDiscoverer.Start()
 	}
 	return nil
 }
@@ -1782,6 +1782,17 @@ func (s *connection) applyTransportParameters() {
 		// Retire the connection ID.
 		s.connIDManager.AddFromPreferredAddress(params.PreferredAddress.ConnectionID, params.PreferredAddress.StatelessResetToken)
 	}
+	maxPacketSize := protocol.ByteCount(protocol.MaxPacketBufferSize)
+	if params.MaxUDPPayloadSize > 0 && params.MaxUDPPayloadSize < maxPacketSize {
+		maxPacketSize = params.MaxUDPPayloadSize
+	}
+	s.mtuDiscoverer = newMTUDiscoverer(
+		s.rttStats,
+		protocol.ByteCount(s.config.InitialPacketSize),
+		maxPacketSize,
+		s.onMTUIncreased,
+		s.tracer,
+	)
 }
 
 func (s *connection) triggerSending(now time.Time) error {
@@ -1870,7 +1881,7 @@ func (s *connection) sendPackets(now time.Time) error {
 	}
 
 	if !s.handshakeConfirmed {
-		packet, err := s.packer.PackCoalescedPacket(false, s.mtuDiscoverer.CurrentSize(), s.version)
+		packet, err := s.packer.PackCoalescedPacket(false, s.maxPacketSize(), s.version)
 		if err != nil || packet == nil {
 			return err
 		}
@@ -1897,7 +1908,7 @@ func (s *connection) sendPacketsWithoutGSO(now time.Time) error {
 	for {
 		buf := getPacketBuffer()
 		ecn := s.sentPacketHandler.ECNMode(true)
-		if _, err := s.appendOneShortHeaderPacket(buf, s.mtuDiscoverer.CurrentSize(), ecn, now); err != nil {
+		if _, err := s.appendOneShortHeaderPacket(buf, s.maxPacketSize(), ecn, now); err != nil {
 			if err == errNothingToPack {
 				buf.Release()
 				return nil
@@ -1928,7 +1939,7 @@ func (s *connection) sendPacketsWithoutGSO(now time.Time) error {
 
 func (s *connection) sendPacketsWithGSO(now time.Time) error {
 	buf := getLargePacketBuffer()
-	maxSize := s.mtuDiscoverer.CurrentSize()
+	maxSize := s.maxPacketSize()
 
 	ecn := s.sentPacketHandler.ECNMode(true)
 	for {
@@ -1997,7 +2008,7 @@ func (s *connection) resetPacingDeadline() {
 func (s *connection) maybeSendAckOnlyPacket(now time.Time) error {
 	if !s.handshakeConfirmed {
 		ecn := s.sentPacketHandler.ECNMode(false)
-		packet, err := s.packer.PackCoalescedPacket(true, s.mtuDiscoverer.CurrentSize(), s.version)
+		packet, err := s.packer.PackCoalescedPacket(true, s.maxPacketSize(), s.version)
 		if err != nil {
 			return err
 		}
@@ -2008,7 +2019,7 @@ func (s *connection) maybeSendAckOnlyPacket(now time.Time) error {
 	}
 
 	ecn := s.sentPacketHandler.ECNMode(true)
-	p, buf, err := s.packer.PackAckOnlyPacket(s.mtuDiscoverer.CurrentSize(), s.version)
+	p, buf, err := s.packer.PackAckOnlyPacket(s.maxPacketSize(), s.version)
 	if err != nil {
 		if err == errNothingToPack {
 			return nil
@@ -2030,7 +2041,7 @@ func (s *connection) sendProbePacket(encLevel protocol.EncryptionLevel, now time
 			break
 		}
 		var err error
-		packet, err = s.packer.MaybePackProbePacket(encLevel, s.mtuDiscoverer.CurrentSize(), s.version)
+		packet, err = s.packer.MaybePackProbePacket(encLevel, s.maxPacketSize(), s.version)
 		if err != nil {
 			return err
 		}
@@ -2041,7 +2052,7 @@ func (s *connection) sendProbePacket(encLevel protocol.EncryptionLevel, now time
 	if packet == nil {
 		s.retransmissionQueue.AddPing(encLevel)
 		var err error
-		packet, err = s.packer.MaybePackProbePacket(encLevel, s.mtuDiscoverer.CurrentSize(), s.version)
+		packet, err = s.packer.MaybePackProbePacket(encLevel, s.maxPacketSize(), s.version)
 		if err != nil {
 			return err
 		}
@@ -2120,14 +2131,14 @@ func (s *connection) sendConnectionClose(e error) ([]byte, error) {
 	var transportErr *qerr.TransportError
 	var applicationErr *qerr.ApplicationError
 	if errors.As(e, &transportErr) {
-		packet, err = s.packer.PackConnectionClose(transportErr, s.mtuDiscoverer.CurrentSize(), s.version)
+		packet, err = s.packer.PackConnectionClose(transportErr, s.maxPacketSize(), s.version)
 	} else if errors.As(e, &applicationErr) {
-		packet, err = s.packer.PackApplicationClose(applicationErr, s.mtuDiscoverer.CurrentSize(), s.version)
+		packet, err = s.packer.PackApplicationClose(applicationErr, s.maxPacketSize(), s.version)
 	} else {
 		packet, err = s.packer.PackConnectionClose(&qerr.TransportError{
 			ErrorCode:    qerr.InternalError,
 			ErrorMessage: fmt.Sprintf("connection BUG: unspecified error type (msg: %s)", e.Error()),
-		}, s.mtuDiscoverer.CurrentSize(), s.version)
+		}, s.maxPacketSize(), s.version)
 	}
 	if err != nil {
 		return nil, err
@@ -2135,6 +2146,24 @@ func (s *connection) sendConnectionClose(e error) ([]byte, error) {
 	ecn := s.sentPacketHandler.ECNMode(packet.IsOnlyShortHeaderPacket())
 	s.logCoalescedPacket(packet, ecn)
 	return packet.buffer.Data, s.conn.Write(packet.buffer.Data, 0, ecn)
+}
+
+func (s *connection) maxPacketSize() protocol.ByteCount {
+	if s.mtuDiscoverer == nil {
+		// Use the configured packet size on the client side.
+		// If the server sends a max_udp_payload_size that's smaller than this size, we can ignore this:
+		// Apparently the server still processed the (fully padded) Initial packet anyway.
+		if s.perspective == protocol.PerspectiveClient {
+			return protocol.ByteCount(s.config.InitialPacketSize)
+		}
+		// On the server side, there's no downside to using 1200 bytes until we received the client's transport
+		// parameters:
+		// * If the first packet didn't contain the entire ClientHello, all we can do is ACK that packet. We don't
+		//   need a lot of bytes for that.
+		// * If it did, we will have processed the transport parameters and initialized the MTU discoverer.
+		return protocol.MinInitialPacketSize
+	}
+	return s.mtuDiscoverer.CurrentSize()
 }
 
 func (s *connection) logLongHeaderPacket(p *longHeaderPacket, ecn protocol.ECN) {
@@ -2359,13 +2388,24 @@ func (s *connection) onStreamCompleted(id protocol.StreamID) {
 		s.closeLocal(err)
 	}
 }
+
+func (s *connection) onMTUIncreased(mtu protocol.ByteCount) {
+	s.maxPayloadSizeEstimate.Store(uint32(estimateMaxPayloadSize(mtu)))
+	s.sentPacketHandler.SetMaxDatagramSize(mtu)
+}
+
 func (s *connection) SendDatagram(p []byte) error {
 	if !s.supportsDatagrams() {
 		return errors.New("datagram support disabled")
 	}
 
 	f := &wire.DatagramFrame{DataLenPresent: true}
-	maxDataLen := f.MaxDataLen(s.peerParams.MaxDatagramFrameSize, s.version)
+	// The payload size estimate is conservative.
+	// Under many circumstances we could send a few more bytes.
+	maxDataLen := min(
+		f.MaxDataLen(s.peerParams.MaxDatagramFrameSize, s.version),
+		protocol.ByteCount(s.maxPayloadSizeEstimate.Load()),
+	)
 	if protocol.ByteCount(len(p)) > maxDataLen {
 		return &DatagramTooLargeError{MaxDatagramPayloadSize: int64(maxDataLen)}
 	}
@@ -2401,4 +2441,11 @@ func (s *connection) NextConnection() Connection {
 
 func (s *connection) SetCongestionControl(cc congestion.CongestionControl) {
 	s.sentPacketHandler.SetCongestionControl(cc)
+}
+
+// estimateMaxPayloadSize estimates the maximum payload size for short header packets.
+// It is not very sophisticated: it just subtracts the size of header (assuming the maximum
+// connection ID length), and the size of the encryption tag.
+func estimateMaxPayloadSize(mtu protocol.ByteCount) protocol.ByteCount {
+	return mtu - 1 /* type byte */ - 20 /* maximum connection ID length */ - 16 /* tag size */
 }
