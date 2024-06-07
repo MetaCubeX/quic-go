@@ -1,3 +1,5 @@
+//go:build go1.21
+
 package qtls
 
 import (
@@ -29,14 +31,14 @@ var _ = Describe("interface go crypto/tls", func() {
 	Context("setting up a tls.Config for the client", func() {
 		It("sets up a session cache if there's one present on the config", func() {
 			csc := tls.NewLRUClientSessionCache(1)
-			conf := &tls.QUICConfig{TLSConfig: &tls.Config{ClientSessionCache: csc}}
+			conf := &QUICConfig{TLSConfig: &tls.Config{ClientSessionCache: csc}}
 			SetupConfigForClient(conf, nil, nil)
 			Expect(conf.TLSConfig.ClientSessionCache).ToNot(BeNil())
 			Expect(conf.TLSConfig.ClientSessionCache).ToNot(Equal(csc))
 		})
 
 		It("doesn't set up a session cache if there's none present on the config", func() {
-			conf := &tls.QUICConfig{TLSConfig: &tls.Config{}}
+			conf := &QUICConfig{TLSConfig: &tls.Config{}}
 			SetupConfigForClient(conf, nil, nil)
 			Expect(conf.TLSConfig.ClientSessionCache).To(BeNil())
 		})
@@ -50,8 +52,9 @@ var _ = Describe("interface go crypto/tls", func() {
 
 		It("sets the minimum TLS version to TLS 1.3", func() {
 			orig := &tls.Config{MinVersion: tls.VersionTLS12}
-			conf := SetupConfigForServer(orig, local, remote, nil, nil)
-			Expect(conf.MinVersion).To(BeEquivalentTo(tls.VersionTLS13))
+			qConf := &tls.QUICConfig{TLSConfig: orig}
+			SetupConfigForServer(qConf, local, remote, false, nil, nil)
+			Expect(qConf.TLSConfig.MinVersion).To(BeEquivalentTo(tls.VersionTLS13))
 			// check that the original config wasn't modified
 			Expect(orig.MinVersion).To(BeEquivalentTo(tls.VersionTLS12))
 		})
@@ -65,8 +68,9 @@ var _ = Describe("interface go crypto/tls", func() {
 					return &tls.Certificate{}, nil
 				},
 			}
-			conf := SetupConfigForServer(tlsConf, local, remote, nil, nil)
-			_, err := conf.GetCertificate(&tls.ClientHelloInfo{})
+			conf := &tls.QUICConfig{TLSConfig: tlsConf}
+			SetupConfigForServer(conf, local, remote, false, nil, nil)
+			_, err := conf.TLSConfig.GetCertificate(&tls.ClientHelloInfo{})
 			Expect(err).ToNot(HaveOccurred())
 			Expect(localAddr).To(Equal(local))
 			Expect(remoteAddr).To(Equal(remote))
@@ -74,20 +78,22 @@ var _ = Describe("interface go crypto/tls", func() {
 
 		It("wraps GetConfigForClient", func() {
 			var localAddr, remoteAddr net.Addr
-			tlsConf := SetupConfigForServer(
-				&tls.Config{
-					GetConfigForClient: func(info *tls.ClientHelloInfo) (*tls.Config, error) {
-						localAddr = info.Conn.LocalAddr()
-						remoteAddr = info.Conn.RemoteAddr()
-						return &tls.Config{}, nil
-					},
+			qConf := &tls.QUICConfig{TLSConfig: &tls.Config{
+				GetConfigForClient: func(info *tls.ClientHelloInfo) (*tls.Config, error) {
+					localAddr = info.Conn.LocalAddr()
+					remoteAddr = info.Conn.RemoteAddr()
+					return &tls.Config{}, nil
 				},
+			}}
+			SetupConfigForServer(
+				qConf,
 				local,
 				remote,
+				false,
 				nil,
 				nil,
 			)
-			conf, err := tlsConf.GetConfigForClient(&tls.ClientHelloInfo{})
+			conf, err := qConf.TLSConfig.GetConfigForClient(&tls.ClientHelloInfo{})
 			Expect(err).ToNot(HaveOccurred())
 			Expect(localAddr).To(Equal(local))
 			Expect(remoteAddr).To(Equal(remote))
@@ -111,8 +117,9 @@ var _ = Describe("interface go crypto/tls", func() {
 				innerConf.GetCertificate = getCert
 				return innerConf, nil
 			}
-			tlsConf = SetupConfigForServer(tlsConf, local, remote, nil, nil)
-			conf, err := tlsConf.GetConfigForClient(&tls.ClientHelloInfo{})
+			qConf := &tls.QUICConfig{TLSConfig: tlsConf}
+			SetupConfigForServer(qConf, local, remote, false, nil, nil)
+			conf, err := qConf.TLSConfig.GetConfigForClient(&tls.ClientHelloInfo{})
 			Expect(err).ToNot(HaveOccurred())
 			Expect(conf).ToNot(BeNil())
 			Expect(conf.MinVersion).To(BeEquivalentTo(tls.VersionTLS13))
