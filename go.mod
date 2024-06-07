@@ -1,13 +1,14 @@
 module github.com/quic-go/quic-go
 
-go 1.22
+go 1.20
 
 require (
 	github.com/francoispqt/gojay v1.2.13
 	github.com/onsi/ginkgo/v2 v2.9.5
 	github.com/onsi/gomega v1.27.6
 	github.com/prometheus/client_golang v1.19.1
-	github.com/quic-go/qpack v0.5.1
+	github.com/quic-go/qpack v0.4.0
+	github.com/quic-go/qtls-go1-20 v0.4.1
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/mock v0.4.0
 	golang.org/x/crypto v0.26.0
