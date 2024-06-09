@@ -8,6 +8,8 @@ import (
 	"golang.org/x/exp/rand"
 
 	"github.com/quic-go/quic-go/internal/protocol"
+	"github.com/quic-go/quic-go/internal/utils"
+	"github.com/quic-go/quic-go/internal/utils/tree"
 
 	"github.com/stretchr/testify/require"
 )
@@ -105,18 +107,25 @@ func TestFrameSorterGapHandling(t *testing.T) {
 	}
 
 	checkGaps := func(t *testing.T, s *frameSorter, expectedGaps []byteInterval) {
-		if s.gaps.Len() != len(expectedGaps) {
+		if s.gapTree.Len() != len(expectedGaps) {
 			fmt.Println("Gaps:")
-			for gap := s.gaps.Front(); gap != nil; gap = gap.Next() {
-				fmt.Printf("\t%d - %d\n", gap.Value.Start, gap.Value.End)
-			}
-			require.Equal(t, len(expectedGaps), s.gaps.Len())
+			s.gapTree.Ascend(func(n *tree.Node[utils.ByteInterval], i int) bool {
+				gap := n.Value
+				fmt.Printf("\t%d - %d\n", gap.Start, gap.End)
+				return true
+			})
+			require.Equal(t, len(expectedGaps), s.gapTree.Len())
 		}
 		var i int
-		for gap := s.gaps.Front(); gap != nil; gap = gap.Next() {
-			require.Equal(t, expectedGaps[i], gap.Value)
+		s.gapTree.Ascend(func(n *tree.Node[utils.ByteInterval], _ int) bool {
+			gap := n.Value
+			require.Equal(t, utils.ByteInterval{
+				Start: expectedGaps[i].Start,
+				End:   expectedGaps[i].End,
+			}, gap)
 			i++
-		}
+			return true
+		})
 	}
 
 	// ---xxx--------------
@@ -1369,7 +1378,7 @@ func TestFrameSorterTooManyGaps(t *testing.T) {
 	for i := 0; i < protocol.MaxStreamFrameSorterGaps; i++ {
 		require.NoError(t, s.Push([]byte("foobar"), protocol.ByteCount(i*7), nil))
 	}
-	require.Equal(t, protocol.MaxStreamFrameSorterGaps, s.gaps.Len())
+	require.Equal(t, protocol.MaxStreamFrameSorterGaps, s.gapTree.Len())
 	err := s.Push([]byte("foobar"), protocol.ByteCount(protocol.MaxStreamFrameSorterGaps*7)+100, nil)
 	require.EqualError(t, err, "too many gaps in received data")
 }
@@ -1444,8 +1453,8 @@ func testFrameSorterRandomized(t *testing.T, dataLen protocol.ByteCount, injectD
 			callbacks = append(callbacks, tr)
 		}
 	}
-	require.Equal(t, 1, s.gaps.Len())
-	require.Equal(t, byteInterval{Start: num * dataLen, End: protocol.MaxByteCount}, s.gaps.Front().Value)
+	require.Equal(t, 1, s.gapTree.Len())
+	require.Equal(t, utils.ByteInterval{Start: num * dataLen, End: protocol.MaxByteCount}, s.gapTree.Head())
 
 	// read all data
 	var read []byte
