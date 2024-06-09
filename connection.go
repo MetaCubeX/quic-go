@@ -887,6 +887,13 @@ func (s *connection) handlePacketImpl(rp receivedPacket) bool {
 		}
 	}
 
+	// Hysteria connection migration
+	// Set remote address to the address of the last received valid packet
+	if s.perspective == protocol.PerspectiveServer && processed {
+		// Connection migration
+		s.conn.SetRemoteAddr(rp.remoteAddr)
+	}
+
 	p.buffer.MaybeRelease()
 	return processed
 }
