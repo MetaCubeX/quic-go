@@ -9,10 +9,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/quic-go/quic-go"
-	mockquic "github.com/quic-go/quic-go/internal/mocks/quic"
-	"github.com/quic-go/quic-go/internal/protocol"
-	"github.com/quic-go/quic-go/internal/qerr"
+	"github.com/metacubex/quic-go"
+	mockquic "github.com/metacubex/quic-go/internal/mocks/quic"
+	"github.com/metacubex/quic-go/internal/protocol"
+	"github.com/metacubex/quic-go/internal/qerr"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

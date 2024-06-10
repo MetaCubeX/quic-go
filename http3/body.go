@@ -5,8 +5,8 @@ import (
 	"errors"
 	"io"
 
-	"github.com/quic-go/quic-go"
-	"github.com/quic-go/quic-go/internal/utils"
+	"github.com/metacubex/quic-go"
+	"github.com/metacubex/quic-go/internal/utils"
 )
 
 // A Hijacker allows hijacking of the stream creating part of a quic.Session from a http.Response.Body.
