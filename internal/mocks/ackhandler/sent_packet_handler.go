@@ -13,6 +13,7 @@ import (
 	reflect "reflect"
 	time "time"
 
+	congestion "github.com/quic-go/quic-go/congestion"
 	ackhandler "github.com/quic-go/quic-go/internal/ackhandler"
 	protocol "github.com/quic-go/quic-go/internal/protocol"
 	wire "github.com/quic-go/quic-go/internal/wire"
@@ -489,6 +490,54 @@ func (c *MockSentPacketHandlerSentPacketCall) Do(f func(time.Time, protocol.Pack
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
 func (c *MockSentPacketHandlerSentPacketCall) DoAndReturn(f func(time.Time, protocol.PacketNumber, protocol.PacketNumber, []ackhandler.StreamFrame, []ackhandler.Frame, protocol.EncryptionLevel, protocol.ECN, protocol.ByteCount, bool)) *MockSentPacketHandlerSentPacketCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
+// SetCongestionControl mocks base method.
+func (m *MockSentPacketHandler) SetCongestionControl(arg0 congestion.CongestionControl) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetCongestionControl", arg0)
+}
+
+// SetCongestionControl indicates an expected call of SetCongestionControl.
+func (mr *MockSentPacketHandlerMockRecorder) SetCongestionControl(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCongestionControl", reflect.TypeOf((*MockSentPacketHandler)(nil).SetCongestionControl), arg0)
+}
+
+// SetHandshakeConfirmed mocks base method.
+func (m *MockSentPacketHandler) SetHandshakeConfirmed() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetHandshakeConfirmed")
+}
+
+// SetHandshakeConfirmed indicates an expected call of SetHandshakeConfirmed.
+func (mr *MockSentPacketHandlerMockRecorder) SetHandshakeConfirmed() *MockSentPacketHandlerSetHandshakeConfirmedCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetHandshakeConfirmed", reflect.TypeOf((*MockSentPacketHandler)(nil).SetHandshakeConfirmed))
+	return &MockSentPacketHandlerSetHandshakeConfirmedCall{Call: call}
+}
+
+// MockSentPacketHandlerSetHandshakeConfirmedCall wrap *gomock.Call
+type MockSentPacketHandlerSetHandshakeConfirmedCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockSentPacketHandlerSetHandshakeConfirmedCall) Return() *MockSentPacketHandlerSetHandshakeConfirmedCall {
+	c.Call = c.Call.Return()
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockSentPacketHandlerSetHandshakeConfirmedCall) Do(f func()) *MockSentPacketHandlerSetHandshakeConfirmedCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockSentPacketHandlerSetHandshakeConfirmedCall) DoAndReturn(f func()) *MockSentPacketHandlerSetHandshakeConfirmedCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
