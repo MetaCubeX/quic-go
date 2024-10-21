@@ -3,7 +3,7 @@ package http3
 import (
 	"errors"
 
-	"github.com/quic-go/quic-go"
+	"github.com/metacubex/quic-go"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
