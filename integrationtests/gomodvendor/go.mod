@@ -5,7 +5,7 @@ go 1.22
 toolchain go1.22.4
 
 // The version doesn't matter here, as we're replacing it with the currently checked out code anyway.
-require github.com/quic-go/quic-go v0.21.0
+require github.com/metacubex/quic-go v0.21.0
 
 require (
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
@@ -22,4 +22,4 @@ require (
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 )
 
-replace github.com/quic-go/quic-go => ../../
+replace github.com/metacubex/quic-go => ../../
