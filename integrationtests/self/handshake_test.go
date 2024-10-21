@@ -9,12 +9,12 @@ import (
 	"net"
 	"time"
 
-	"github.com/quic-go/quic-go"
-	quicproxy "github.com/quic-go/quic-go/integrationtests/tools/proxy"
-	"github.com/quic-go/quic-go/internal/protocol"
-	"github.com/quic-go/quic-go/internal/qerr"
-	"github.com/quic-go/quic-go/internal/qtls"
-	"github.com/quic-go/quic-go/logging"
+	"github.com/metacubex/quic-go"
+	quicproxy "github.com/metacubex/quic-go/integrationtests/tools/proxy"
+	"github.com/metacubex/quic-go/internal/protocol"
+	"github.com/metacubex/quic-go/internal/qerr"
+	"github.com/metacubex/quic-go/internal/qtls"
+	"github.com/metacubex/quic-go/logging"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
