@@ -168,7 +168,9 @@ func (pm *pathManager) SwitchToPath(addr net.Addr) {
 		}
 		pm.retireConnID(path.id)
 	}
-	clear(pm.paths)
+	for i := range pm.paths {
+		pm.paths[i] = nil
+	}
 	pm.paths = pm.paths[:0]
 }
 

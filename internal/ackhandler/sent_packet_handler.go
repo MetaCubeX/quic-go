@@ -481,8 +481,10 @@ func (h *sentPacketHandler) ReceivedAck(ack *wire.AckFrame, encLevel protocol.En
 
 	// After this point, we must not use ackedPackets any longer!
 	// We've already returned the buffers.
-	ackedPackets = nil    //nolint:ineffassign // This is just to be on the safe side.
-	clear(h.ackedPackets) // make sure the memory is released
+	ackedPackets = nil              //nolint:ineffassign // This is just to be on the safe side.
+	for i := range h.ackedPackets { // make sure the memory is released
+		h.ackedPackets[i] = packetWithPacketNumber{}
+	}
 	h.ackedPackets = h.ackedPackets[:0]
 	h.ackedPacketsInfo = nil //nolint:ineffassign // This is just to be on the safe side.
 	h.lostPacketsInfo = nil  //nolint:ineffassign // This is just to be on the safe side.
