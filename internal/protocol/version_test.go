@@ -105,7 +105,7 @@ func TestVersionGreasing(t *testing.T) {
 	// make sure that the greased versions are distinct,
 	// allowing for a small number of duplicates
 	var versions []Version
-	for range 25 {
+	for i := 0; i < 25; i++ {
 		versions = GetGreasedVersions(versions)
 	}
 	slices.Sort(versions)
@@ -125,7 +125,7 @@ func TestVersionGreasing(t *testing.T) {
 	}
 
 	var greasedVersionFirst, greasedVersionLast, greasedVersionMiddle int
-	for range 100 {
+	for i := 0; i < 100; i++ {
 		greased := GetGreasedVersions(supported)
 		require.Len(t, greased, 4)
 

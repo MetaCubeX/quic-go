@@ -188,9 +188,10 @@ func (h *sentPacketHandler) DropPackets(encLevel protocol.EncryptionLevel, now m
 		if pnSpace == nil {
 			return
 		}
-		for _, p := range pnSpace.history.Packets() {
+		pnSpace.history.Packets()(func(pn protocol.PacketNumber, p *packet) bool {
 			h.removeFromBytesInFlight(p)
-		}
+			return true
+		})
 	}
 	// drop the packet history
 	//nolint:exhaustive // Not every packet number space can be dropped.
@@ -207,13 +208,14 @@ func (h *sentPacketHandler) DropPackets(encLevel protocol.EncryptionLevel, now m
 		// and not when the client drops 0-RTT keys when the handshake completes.
 		// When 0-RTT is rejected, all application data sent so far becomes invalid.
 		// Delete the packets from the history and remove them from bytes_in_flight.
-		for pn, p := range h.appDataPackets.history.Packets() {
+		h.appDataPackets.history.Packets()(func(pn protocol.PacketNumber, p *packet) bool {
 			if p.EncryptionLevel != protocol.Encryption0RTT {
-				break
+				return false
 			}
 			h.removeFromBytesInFlight(p)
 			h.appDataPackets.history.Remove(pn)
-		}
+			return true
+		})
 	default:
 		panic(fmt.Sprintf("Cannot drop keys for encryption level %s", encLevel))
 	}
@@ -511,7 +513,7 @@ func (h *sentPacketHandler) detectSpuriousLosses(ack *wire.AckFrame, ackTime mon
 	var maxTimeReordering time.Duration
 	ackRangeIdx := len(ack.AckRanges) - 1
 	var spuriousLosses []protocol.PacketNumber
-	for pn, sendTime := range h.lostPackets.All() {
+	h.lostPackets.All()(func(pn protocol.PacketNumber, sendTime monotime.Time) bool {
 		ackRange := ack.AckRanges[ackRangeIdx]
 		for pn > ackRange.Largest {
 			// this should never happen, since detectSpuriousLosses is only called for ACKs that increase the largest acked
@@ -522,7 +524,7 @@ func (h *sentPacketHandler) detectSpuriousLosses(ack *wire.AckFrame, ackTime mon
 			ackRange = ack.AckRanges[ackRangeIdx]
 		}
 		if pn < ackRange.Smallest {
-			continue
+			return true
 		}
 		if pn <= ackRange.Largest {
 			packetReordering := h.appDataPackets.history.Difference(ack.LargestAcked(), pn)
@@ -540,7 +542,8 @@ func (h *sentPacketHandler) detectSpuriousLosses(ack *wire.AckFrame, ackTime mon
 			}
 			spuriousLosses = append(spuriousLosses, pn)
 		}
-	}
+		return true
+	})
 	for _, pn := range spuriousLosses {
 		h.lostPackets.Delete(pn)
 	}
@@ -558,26 +561,33 @@ func (h *sentPacketHandler) detectAndRemoveAckedPackets(
 	pnSpace := h.getPacketNumberSpace(encLevel)
 
 	if encLevel == protocol.Encryption1RTT {
-		for p := range pnSpace.history.SkippedPackets() {
+		var err error
+		pnSpace.history.SkippedPackets()(func(p protocol.PacketNumber) bool {
 			if ack.AcksPacket(p) {
-				return nil, false, &qerr.TransportError{
+				err = &qerr.TransportError{
 					ErrorCode:    qerr.ProtocolViolation,
 					ErrorMessage: fmt.Sprintf("received an ACK for skipped packet number: %d (%s)", p, encLevel),
 				}
+				return false
 			}
+			return true
+		})
+		if err != nil {
+			return nil, false, err
 		}
 	}
 
 	var ackRangeIndex int
 	lowestAcked := ack.LowestAcked()
 	largestAcked := ack.LargestAcked()
-	for pn, p := range pnSpace.history.Packets() {
+	var err error
+	pnSpace.history.Packets()(func(pn protocol.PacketNumber, p *packet) bool {
 		// ignore packets below the lowest acked
 		if pn < lowestAcked {
-			continue
+			return true
 		}
 		if pn > largestAcked {
-			break
+			return false
 		}
 
 		if ack.HasMissingRanges() {
@@ -589,10 +599,11 @@ func (h *sentPacketHandler) detectAndRemoveAckedPackets(
 			}
 
 			if pn < ackRange.Smallest { // packet not contained in ACK range
-				continue
+				return true
 			}
 			if pn > ackRange.Largest {
-				return nil, false, fmt.Errorf("BUG: ackhandler would have acked wrong packet %d, while evaluating range %d -> %d", pn, ackRange.Smallest, ackRange.Largest)
+				err = fmt.Errorf("BUG: ackhandler would have acked wrong packet %d, while evaluating range %d -> %d", pn, ackRange.Smallest, ackRange.Largest)
+				return false
 			}
 		}
 		if p.isPathProbePacket {
@@ -601,12 +612,16 @@ func (h *sentPacketHandler) detectAndRemoveAckedPackets(
 			if probePacket != nil {
 				h.ackedPackets = append(h.ackedPackets, packetWithPacketNumber{PacketNumber: pn, packet: probePacket})
 			}
-			continue
+			return true
 		}
 		if p.IsAckEliciting() {
 			hasAckEliciting = true
 		}
 		h.ackedPackets = append(h.ackedPackets, packetWithPacketNumber{PacketNumber: pn, packet: p})
+		return true
+	})
+	if err != nil {
+		return nil, false, err
 	}
 	if h.logger.Debug() && len(h.ackedPackets) > 0 {
 		pns := make([]protocol.PacketNumber, len(h.ackedPackets))
@@ -795,11 +810,12 @@ func (h *sentPacketHandler) detectLostPathProbes(now monotime.Time) {
 	lossTime := now.Add(-pathProbePacketLossTimeout)
 	// RemovePathProbe cannot be called while iterating.
 	var lostPathProbes []packetWithPacketNumber
-	for pn, p := range h.appDataPackets.history.PathProbes() {
+	h.appDataPackets.history.PathProbes()(func(pn protocol.PacketNumber, p *packet) bool {
 		if !p.SendTime.After(lossTime) {
 			lostPathProbes = append(lostPathProbes, packetWithPacketNumber{PacketNumber: pn, packet: p})
 		}
-	}
+		return true
+	})
 	for _, p := range lostPathProbes {
 		for _, f := range p.Frames {
 			f.Handler.OnLost(f.Frame)
@@ -825,9 +841,9 @@ func (h *sentPacketHandler) detectLostPackets(now monotime.Time, encLevel protoc
 	cc := h.getCongestionControl()
 
 	priorInFlight := h.bytesInFlight
-	for pn, p := range pnSpace.history.Packets() {
+	pnSpace.history.Packets()(func(pn protocol.PacketNumber, p *packet) bool {
 		if pn > pnSpace.largestAcked {
-			break
+			return false
 		}
 
 		var packetLost bool
@@ -892,7 +908,8 @@ func (h *sentPacketHandler) detectLostPackets(now monotime.Time, encLevel protoc
 				}
 			}
 		}
-	}
+		return true
+	})
 }
 
 func (h *sentPacketHandler) OnLossDetectionTimeout(now monotime.Time) error {
@@ -1112,21 +1129,23 @@ func (h *sentPacketHandler) queueFramesForRetransmission(p *packet) {
 func (h *sentPacketHandler) ResetForRetry(now monotime.Time) {
 	h.bytesInFlight = 0
 	var firstPacketSendTime monotime.Time
-	for _, p := range h.initialPackets.history.Packets() {
+	h.initialPackets.history.Packets()(func(pn protocol.PacketNumber, p *packet) bool {
 		if firstPacketSendTime.IsZero() {
 			firstPacketSendTime = p.SendTime
 		}
 		if p.IsAckEliciting() {
 			h.queueFramesForRetransmission(p)
 		}
-	}
+		return true
+	})
 	// All application data packets sent at this point are 0-RTT packets.
 	// In the case of a Retry, we can assume that the server dropped all of them.
-	for _, p := range h.appDataPackets.history.Packets() {
+	h.appDataPackets.history.Packets()(func(pn protocol.PacketNumber, p *packet) bool {
 		if p.IsAckEliciting() {
 			h.queueFramesForRetransmission(p)
 		}
-	}
+		return true
+	})
 
 	// Only use the Retry to estimate the RTT if we didn't send any retransmission for the Initial.
 	// Otherwise, we don't know which Initial the Retry was sent in response to.
@@ -1157,7 +1176,7 @@ func (h *sentPacketHandler) ResetForRetry(now monotime.Time) {
 
 func (h *sentPacketHandler) MigratedPath(now monotime.Time, initialMaxDatagramSize protocol.ByteCount) {
 	h.rttStats.ResetForPathMigration()
-	for pn, p := range h.appDataPackets.history.Packets() {
+	h.appDataPackets.history.Packets()(func(pn protocol.PacketNumber, p *packet) bool {
 		h.appDataPackets.history.DeclareLost(pn)
 		if !p.isPathProbePacket {
 			h.removeFromBytesInFlight(p)
@@ -1165,10 +1184,12 @@ func (h *sentPacketHandler) MigratedPath(now monotime.Time, initialMaxDatagramSi
 				h.queueFramesForRetransmission(p)
 			}
 		}
-	}
-	for pn := range h.appDataPackets.history.PathProbes() {
+		return true
+	})
+	h.appDataPackets.history.PathProbes()(func(pn protocol.PacketNumber, p *packet) bool {
 		h.appDataPackets.history.RemovePathProbe(pn)
-	}
+		return true
+	})
 	h.congestion = congestion.NewCubicSender(
 		congestion.DefaultClock{},
 		h.rttStats,

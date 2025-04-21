@@ -56,7 +56,7 @@ func TestParseConnIDEOFLongHeader(t *testing.T) {
 	data := b[:len(b)-2] // cut the packet number
 	_, err = ParseConnectionID(data, 8)
 	require.NoError(t, err)
-	for i := range 1 /* first byte */ + 4 /* version */ + 1 /* conn ID lengths */ + 6 {
+	for i := 0; i < 1 /* first byte */ +4 /* version */ +1 /* conn ID lengths */ +6; i++ {
 		b := make([]byte, i)
 		copy(b, data[:i])
 		_, err := ParseConnectionID(b, 8)
@@ -455,7 +455,7 @@ func BenchmarkIs0RTTPacket(b *testing.B) {
 	src := mrand.NewChaCha8([32]byte{'f', 'o', 'o', 'b', 'a', 'r'})
 	random := mrand.New(src)
 	packets := make([][]byte, 1024)
-	for i := range len(packets) {
+	for i := 0; i < len(packets); i++ {
 		packets[i] = make([]byte, random.IntN(256))
 		src.Read(packets[i])
 	}

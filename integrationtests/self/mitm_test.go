@@ -128,7 +128,7 @@ func testMITMInjectRandomPackets(t *testing.T, direction quicproxy.Direction) {
 		go func() {
 			ticker := time.NewTicker(rtt / 10)
 			defer ticker.Stop()
-			for range 10 {
+			for i := 0; i < 10; i++ {
 				switch direction {
 				case quicproxy.DirectionIncoming:
 					clientTransport.WriteTo(createRandomPacketOfSameType(b), serverTransport.Conn.LocalAddr())

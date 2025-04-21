@@ -208,7 +208,7 @@ func TestPathManagerNATRebinding(t *testing.T) {
 
 func TestPathManagerLimits(t *testing.T) {
 	var connIDs []protocol.ConnectionID
-	for range 2*maxPaths + 2 {
+	for i := 0; i < 2*maxPaths+2; i++ {
 		b := make([]byte, 8)
 		rand.Read(b)
 		connIDs = append(connIDs, protocol.ParseConnectionID(b))
@@ -224,7 +224,7 @@ func TestPathManagerLimits(t *testing.T) {
 	firstPathTime := now
 	var firstPathConnID protocol.ConnectionID
 	require.Greater(t, pathTimeout, maxPaths*time.Second)
-	for i := range maxPaths {
+	for i := 0; i < maxPaths; i++ {
 		connID, frames, _ := pm.HandlePacket(&net.UDPAddr{IP: net.IPv4(1, 2, 3, 4), Port: 1000 + i}, now, nil, true)
 		require.NotEmpty(t, frames)
 		require.Equal(t, connIDs[i], connID)
@@ -251,7 +251,7 @@ func TestPathManagerLimits(t *testing.T) {
 	// switching to a new path frees is up all paths
 	var f1 []ackhandler.Frame
 	pm.SwitchToPath(&net.UDPAddr{IP: net.IPv4(1, 2, 3, 4), Port: 1000})
-	for i := range maxPaths {
+	for i := 0; i < maxPaths; i++ {
 		connID, frames, _ := pm.HandlePacket(&net.UDPAddr{IP: net.IPv4(1, 2, 3, 4), Port: 3000 + i}, now, nil, true)
 		if i == 0 {
 			f1 = frames

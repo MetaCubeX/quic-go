@@ -234,7 +234,7 @@ func testStreamsMapIncomingDeletingStreamsWithHighLimits(t *testing.T, pers prot
 	_, err := m.GetOrOpenStream(firstStream + 16)
 	require.NoError(t, err)
 	// accept all streams
-	for range 5 {
+	for j := 0; j < 5; j++ {
 		_, err := m.AcceptStream(context.Background())
 		require.NoError(t, err)
 	}
@@ -270,7 +270,7 @@ func TestStreamsMapIncomingClosing(t *testing.T) {
 		var streams []*mockStream
 		_, err := m.GetOrOpenStream(protocol.FirstIncomingUniStreamServer + 8)
 		require.NoError(t, err)
-		for range 3 {
+		for j := 0; j < 3; j++ {
 			str, err := m.AcceptStream(context.Background())
 			require.NoError(t, err)
 			streams = append(streams, str)
@@ -319,14 +319,14 @@ func TestStreamsMapIncomingRandomized(t *testing.T) {
 		)
 
 		ids := make([]protocol.StreamID, num)
-		for i := range num {
+		for i := 0; i < num; i++ {
 			ids[i] = firstStream + 4*protocol.StreamID(i)
 		}
 		rand.Shuffle(len(ids), func(i, j int) { ids[i], ids[j] = ids[j], ids[i] })
 
 		errChan1 := make(chan error, 1)
 		go func() {
-			for range num {
+			for j := 0; j < num; j++ {
 				if _, err := m.AcceptStream(context.Background()); err != nil {
 					errChan1 <- err
 					return
@@ -337,7 +337,7 @@ func TestStreamsMapIncomingRandomized(t *testing.T) {
 
 		errChan2 := make(chan error, 1)
 		go func() {
-			for i := range num {
+			for i := 0; i < num; i++ {
 				if _, err := m.GetOrOpenStream(ids[i]); err != nil {
 					errChan2 <- err
 					return

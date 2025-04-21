@@ -294,7 +294,7 @@ func TestDatagramLoss(t *testing.T) {
 			}
 		}()
 
-		for i := range numDatagrams {
+		for i := 0; i < numDatagrams; i++ {
 			payload := bytes.Repeat([]byte{uint8(i)}, datagramSize)
 			require.NoError(t, clientConn.SendDatagram(payload))
 			require.NoError(t, serverConn.SendDatagram(payload))

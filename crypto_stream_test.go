@@ -98,7 +98,7 @@ func TestCryptoStreamWrite(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, str.HasData())
 
-	for i := range expectedCryptoFrameLen(0) {
+	for i := protocol.ByteCount(0); i < expectedCryptoFrameLen(0); i++ {
 		require.Nil(t, str.PopCryptoFrame(i))
 	}
 
@@ -215,7 +215,7 @@ func randomDomainName(length int) string {
 func TestInitialCryptoStreamClientRandomizedSizes(t *testing.T) {
 	skipIfDisableScramblingEnvSet(t)
 
-	for i := range 100 {
+	for i := 0; i < 100; i++ {
 		t.Run(fmt.Sprintf("run %d", i), func(t *testing.T) {
 			var serverName string
 			if mrand.Int()%4 > 0 {

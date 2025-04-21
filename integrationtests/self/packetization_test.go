@@ -92,7 +92,7 @@ func TestACKBundling(t *testing.T) {
 	require.NoError(t, err)
 	b := make([]byte, 1)
 	// Send numMsg 1-byte messages.
-	for i := range numMsg {
+	for i := 0; i < numMsg; i++ {
 		_, err = str.Write([]byte{uint8(i)})
 		require.NoError(t, err)
 		_, err = str.Read(b)
@@ -197,12 +197,12 @@ func testConnAndStreamDataBlocked(t *testing.T, limitStream, limitConn bool) {
 	// Stream data is consumed (almost) immediately, so flow-control window auto-tuning kicks in.
 	// The window size is doubled for every batch.
 	var windowSizes []protocol.ByteCount
-	for i := range numBatches {
+	for i := 0; i < numBatches; i++ {
 		windowSizes = append(windowSizes, window<<i)
 	}
 
 	var serverStr *quic.ReceiveStream
-	for i := range numBatches {
+	for i := 0; i < numBatches; i++ {
 		str.SetWriteDeadline(time.Now().Add(rtt))
 		n, err := str.Write(make([]byte, 10000))
 		require.Error(t, err)
@@ -246,7 +246,7 @@ func testConnAndStreamDataBlocked(t *testing.T, limitStream, limitConn bool) {
 	}
 
 	var expectedBlockOffsets []protocol.ByteCount
-	for i := range numBatches {
+	for i := 0; i < numBatches; i++ {
 		var offset protocol.ByteCount
 		for _, s := range windowSizes[:i+1] {
 			offset += s

@@ -87,7 +87,7 @@ func testStateTrackingStreamRead(t *testing.T, reset bool) {
 	if !reset {
 		server.Close()
 
-		for range 3 {
+		for i := 0; i < 3; i++ {
 			_, err := str.Read([]byte{0})
 			require.NoError(t, err)
 			require.Nil(t, clearer.cleared)
@@ -282,10 +282,10 @@ func TestDatagramReceiving(t *testing.T) {
 	}
 
 	// up to 32 datagrams can be queued
-	for i := range streamDatagramQueueLen + 1 {
+	for i := 0; i < streamDatagramQueueLen+1; i++ {
 		str.enqueueDatagram([]byte{uint8(i)})
 	}
-	for i := range streamDatagramQueueLen {
+	for i := 0; i < streamDatagramQueueLen; i++ {
 		data, err := str.ReceiveDatagram(context.Background())
 		require.NoError(t, err)
 		require.Equal(t, []byte{uint8(i)}, data)

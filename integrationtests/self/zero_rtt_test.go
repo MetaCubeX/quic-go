@@ -686,7 +686,7 @@ func Test0RTTRejectedOnStreamLimitDecrease(t *testing.T) {
 		defer conn.CloseWithError(0, "")
 
 		// It should now be possible to open new bidirectional streams up to the new limit...
-		for range newMaxBidiStreams {
+		for i := 0; i < newMaxBidiStreams; i++ {
 			_, err = conn.OpenStream()
 			require.NoError(t, err)
 		}
@@ -695,7 +695,7 @@ func Test0RTTRejectedOnStreamLimitDecrease(t *testing.T) {
 		require.ErrorIs(t, err, &quic.StreamLimitReachedError{})
 
 		// It should now be possible to open new unidirectional streams up to the new limit...
-		for range newMaxUniStreams {
+		for i := 0; i < newMaxUniStreams; i++ {
 			_, err = conn.OpenUniStream()
 			require.NoError(t, err)
 		}

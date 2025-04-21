@@ -130,7 +130,7 @@ func TestConnIDGeneratorRetiring(t *testing.T) {
 	t1 := now.Add(time.Duration(rand.IntN(1000)) * time.Millisecond)
 	retirements[initialConnID] = t1
 	g.SetHandshakeComplete(t1)
-	for i := range 5 {
+	for i := 0; i < 5; i++ {
 		t2 := now.Add(time.Duration(rand.IntN(1000)) * time.Millisecond)
 		require.NoError(t, g.Retire(uint64(i+1), protocol.ParseConnectionID([]byte{9, 9, 9, 9}), t2))
 		retirements[added[i]] = t2

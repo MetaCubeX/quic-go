@@ -93,7 +93,7 @@ func GenerateTLSConfigWithLongCertChain(ca *x509.Certificate, caPrivateKey crypt
 		return nil, err
 	}
 	certs := make([]*x509.Certificate, chainLen)
-	for i := range chainLen {
+	for i := 0; i < chainLen; i++ {
 		caBytes, err := x509.CreateCertificate(rand.Reader, certTempl, lastCA, priv.Public(), lastCAPrivKey)
 		if err != nil {
 			return nil, err

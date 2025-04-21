@@ -116,7 +116,7 @@ func TestParseACKUseAckDelayExponent(t *testing.T) {
 	}
 	b, err := f.Append(nil, protocol.Version1)
 	require.NoError(t, err)
-	for i := range uint8(8) {
+	for i := uint8(0); i < 8; i++ {
 		typ, l, err := quicvarint.Parse(b)
 		require.NoError(t, err)
 		var frame AckFrame
@@ -409,7 +409,7 @@ func TestACKTooManyRanges(t *testing.T) {
 	var ack AckFrame
 	numRanges := protocol.MaxNumAckRanges + 10
 	ack.AckRanges = make([]AckRange, numRanges)
-	for i := range numRanges {
+	for i := 0; i < numRanges; i++ {
 		ack.AckRanges[numRanges-i-1] = AckRange{Smallest: protocol.PacketNumber(2 * i), Largest: protocol.PacketNumber(2 * i)}
 	}
 	require.True(t, ack.validateAckRanges())

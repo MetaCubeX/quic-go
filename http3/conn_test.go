@@ -128,7 +128,7 @@ func testConnRejectDuplicateStreams(t *testing.T, typ uint64) {
 	case <-time.After(time.Second):
 		t.Fatal("timeout waiting for duplicate stream")
 	}
-	for range 2 {
+	for i := 0; i < 2; i++ {
 		select {
 		case <-done:
 		case <-time.After(time.Second):

@@ -48,11 +48,11 @@ func TestCubicAboveOriginWithTighterBounds(t *testing.T) {
 	// The maximum number of expected reno RTTs can be calculated by
 	// finding the point where the cubic curve and the reno curve meet.
 	maxRenoRtts := int(math.Sqrt(float64(nConnectionAlpha/(0.4*rttMinS*rttMinS*rttMinS))) - 2)
-	for range maxRenoRtts {
+	for i := 0; i < maxRenoRtts; i++ {
 		numAcksThisEpoch := int(float32(currentCwnd/maxDatagramSize) / nConnectionAlpha)
 
 		initialCwndThisEpoch := currentCwnd
-		for range numAcksThisEpoch {
+		for i := 0; i < numAcksThisEpoch; i++ {
 			// Call once per ACK.
 			expectedNextCwnd := renoCwnd(currentCwnd)
 			currentCwnd = cubic.CongestionWindowAfterAck(maxDatagramSize, currentCwnd, rttMin, clock.Now())
@@ -63,10 +63,10 @@ func TestCubicAboveOriginWithTighterBounds(t *testing.T) {
 		clock.Advance(100 * time.Millisecond)
 	}
 
-	for range 54 {
+	for i := 0; i < 54; i++ {
 		maxAcksThisEpoch := currentCwnd / maxDatagramSize
 		interval := time.Duration(100*1000/maxAcksThisEpoch) * time.Microsecond
-		for range int(maxAcksThisEpoch) {
+		for i := 0; i < int(maxAcksThisEpoch); i++ {
 			clock.Advance(interval)
 			currentCwnd = cubic.CongestionWindowAfterAck(maxDatagramSize, currentCwnd, rttMin, clock.Now())
 			expectedCwnd := cubicConvexCwnd(initialCwnd, rttMin, clock.Now().Sub(initialTime))
@@ -93,7 +93,7 @@ func TestCubicAboveOriginWithFineGrainedCubing(t *testing.T) {
 	clock.Advance(600 * time.Millisecond)
 	currentCwnd = cubic.CongestionWindowAfterAck(maxDatagramSize, currentCwnd, rttMin, clock.Now())
 
-	for range 100 {
+	for i := 0; i < 100; i++ {
 		clock.Advance(10 * time.Millisecond)
 		expectedCwnd := cubicConvexCwnd(initialCwnd, rttMin, clock.Now().Sub(initialTime))
 		nextCwnd := cubic.CongestionWindowAfterAck(maxDatagramSize, currentCwnd, rttMin, clock.Now())
@@ -126,7 +126,7 @@ func TestCubicHandlesPerAckUpdates(t *testing.T) {
 	rCwnd = renoCwnd(rCwnd)
 	require.Equal(t, currentCwnd, cubic.CongestionWindowAfterAck(maxDatagramSize, currentCwnd, rttMin, clock.Now()))
 
-	for range maxAcks - 1 {
+	for i := 0; i < maxAcks-1; i++ {
 		clock.Advance(interval)
 		nextCwnd := cubic.CongestionWindowAfterAck(maxDatagramSize, currentCwnd, rttMin, clock.Now())
 		rCwnd = renoCwnd(rCwnd)
@@ -196,7 +196,7 @@ func TestCubicBelowOrigin(t *testing.T) {
 
 	currentCwnd = cubic.CongestionWindowAfterAck(maxDatagramSize, currentCwnd, rttMin, clock.Now())
 
-	for range 40 {
+	for i := 0; i < 40; i++ {
 		clock.Advance(100 * time.Millisecond)
 		currentCwnd = cubic.CongestionWindowAfterAck(maxDatagramSize, currentCwnd, rttMin, clock.Now())
 	}

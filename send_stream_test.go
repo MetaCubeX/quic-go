@@ -1280,7 +1280,7 @@ func TestSendStreamConcurrentWriteAndCancel(t *testing.T) {
 			t.Fatal("write should have returned")
 		}
 
-		for range 2 {
+		for j := 0; j < 2; j++ {
 			select {
 			case <-done:
 			default:

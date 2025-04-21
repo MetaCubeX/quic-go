@@ -302,7 +302,7 @@ func TestReadsMultipleMessagesInOneBatch(t *testing.T) {
 	require.NoError(t, err)
 	oobConn.batchConn = bc
 
-	for i := range batchSize + 1 {
+	for i := 0; i < batchSize+1; i++ {
 		p, err := oobConn.ReadPacket()
 		require.NoError(t, err)
 		require.Equal(t, fmt.Sprintf("message %d", i), string(p.data))

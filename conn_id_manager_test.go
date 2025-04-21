@@ -186,7 +186,7 @@ func TestConnIDManagerConnIDRotation(t *testing.T) {
 	// Note that we're missing the connection ID with sequence number 2.
 	// It will be received later.
 	var queuedConnIDs []protocol.ConnectionID
-	for i := range protocol.MaxActiveConnectionIDs - 1 {
+	for i := 0; i < protocol.MaxActiveConnectionIDs-1; i++ {
 		b := make([]byte, 4)
 		rand.Read(b)
 		connID := protocol.ParseConnectionID(b)
@@ -341,7 +341,7 @@ func TestConnIDManagerZeroLengthConnectionID(t *testing.T) {
 		func(f wire.Frame) {},
 	)
 	require.Equal(t, protocol.ConnectionID{}, m.Get())
-	for range 5 * protocol.PacketsPerConnectionID {
+	for i := 0; i < 5*protocol.PacketsPerConnectionID; i++ {
 		m.SentPacket()
 		require.Equal(t, protocol.ConnectionID{}, m.Get())
 	}
@@ -399,7 +399,7 @@ func benchmarkConnIDManager(b *testing.B, reordered bool) {
 	)
 	connIDs := make([]protocol.ConnectionID, 0, protocol.MaxActiveConnectionIDs)
 	statelessResetTokens := make([]protocol.StatelessResetToken, 0, protocol.MaxActiveConnectionIDs)
-	for range protocol.MaxActiveConnectionIDs {
+	for i := 0; i < protocol.MaxActiveConnectionIDs; i++ {
 		b := make([]byte, 8)
 		rand.Read(b)
 		connIDs = append(connIDs, protocol.ParseConnectionID(b))
@@ -415,7 +415,7 @@ func benchmarkConnIDManager(b *testing.B, reordered bool) {
 	offsets := []int{2, -1, -1, 0}
 
 	b.ResetTimer()
-	for i := range b.N {
+	for i := 0; i < b.N; i++ {
 		seq := i
 		if reordered {
 			seq += offsets[i%len(offsets)]

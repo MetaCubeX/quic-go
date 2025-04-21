@@ -22,7 +22,7 @@ func TestGenerateRandomConnectionIDs(t *testing.T) {
 
 func TestGenerateRandomLengthDestinationConnectionIDs(t *testing.T) {
 	var has8ByteConnID, has20ByteConnID bool
-	for range 1000 {
+	for i := 0; i < 1000; i++ {
 		c, err := GenerateConnectionIDForInitial()
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, c.Len(), 8)

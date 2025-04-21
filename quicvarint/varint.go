@@ -149,10 +149,10 @@ func AppendWithLen(b []byte, i uint64, length int) []byte {
 	case 8:
 		b = append(b, 0b11000000)
 	}
-	for range length - l - 1 {
+	for j := 0; j < length-l-1; j++ {
 		b = append(b, 0)
 	}
-	for j := range l {
+	for j := 0; j < l; j++ {
 		b = append(b, uint8(i>>(8*(l-1-j))))
 	}
 	return b

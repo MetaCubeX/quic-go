@@ -122,7 +122,7 @@ func newInitialCryptoStream(isClient bool) *initialCryptoStream {
 		baseCryptoStream: baseCryptoStream{queue: *newFrameSorter()},
 		scramble:         scramble,
 	}
-	for i := range len(s.cuts) {
+	for i := 0; i < len(s.cuts); i++ {
 		s.cuts[i].start = protocol.InvalidByteCount
 		s.cuts[i].end = protocol.InvalidByteCount
 	}

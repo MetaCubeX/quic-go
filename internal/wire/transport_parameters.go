@@ -243,7 +243,7 @@ func (p *TransportParameters) unmarshal(b []byte, sentBy protocol.Perspective, f
 
 	// check that every transport parameter was sent at most once
 	slices.Sort(parameterIDs)
-	for i := range len(parameterIDs) - 1 {
+	for i := 0; i < len(parameterIDs)-1; i++ {
 		if parameterIDs[i] == parameterIDs[i+1] {
 			return fmt.Errorf("received duplicate transport parameter %#x", parameterIDs[i])
 		}

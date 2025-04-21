@@ -175,7 +175,7 @@ func TestHTTPMultipleRequests(t *testing.T) {
 
 		cl := newHTTP3Client(t)
 		var eg errgroup.Group
-		for range 200 {
+		for i := 0; i < 200; i++ {
 			eg.Go(func() error {
 				resp, err := cl.Get(fmt.Sprintf("https://localhost:%d/hello", port))
 				if err != nil {
@@ -205,7 +205,7 @@ func TestHTTPMultipleRequests(t *testing.T) {
 		cl := newHTTP3Client(t)
 		const num = 150
 
-		for range num {
+		for i := 0; i < num; i++ {
 			resp, err := cl.Get(fmt.Sprintf("https://localhost:%d/prdata", port))
 			require.NoError(t, err)
 			require.Equal(t, http.StatusOK, resp.StatusCode)
@@ -254,7 +254,7 @@ func TestHTTPHeaderSizeLimitServer(t *testing.T) {
 	t.Run("large HEADERS frame", func(t *testing.T) {
 		const limit = 1024
 		hdr := make(http.Header)
-		for range 20 {
+		for i := 0; i < 20; i++ {
 			hdr.Add(randomString(50), randomString(50))
 		}
 		headersFrameSize := testHTTPHeaderSizeLimitServer(t, hdr, limit)
@@ -264,7 +264,7 @@ func TestHTTPHeaderSizeLimitServer(t *testing.T) {
 	t.Run("large decompressed HEADERS frame", func(t *testing.T) {
 		const limit = 1024
 		hdr := make(http.Header)
-		for range 200 {
+		for i := 0; i < 200; i++ {
 			// This is a QPACK static table entry, so it will be compressed.
 			hdr.Add("content-type", "text/plain;charset=utf-8")
 		}
@@ -312,7 +312,7 @@ func TestHTTPHeaderSizeLimitClient(t *testing.T) {
 	t.Run("large HEADERS frame", func(t *testing.T) {
 		const limit = 1024
 		hdr := make(http.Header)
-		for range 20 {
+		for i := 0; i < 20; i++ {
 			hdr.Add(randomString(50), randomString(50))
 		}
 		headersFrameSize, requestErr := testHTTPHeaderSizeLimitClient(t, hdr, limit)
@@ -323,7 +323,7 @@ func TestHTTPHeaderSizeLimitClient(t *testing.T) {
 	t.Run("large decompressed HEADERS frame", func(t *testing.T) {
 		const limit = 1024
 		hdr := make(http.Header)
-		for range 200 {
+		for i := 0; i < 200; i++ {
 			// This is a QPACK static table entry, so it will be compressed.
 			hdr.Add("content-type", "text/plain;charset=utf-8")
 		}
@@ -978,7 +978,7 @@ func TestHTTPStreamedRequests(t *testing.T) {
 	require.Equal(t, 200, rsp.StatusCode)
 
 	reader := bufio.NewReader(rsp.Body)
-	for i := range 5 {
+	for i := 0; i < 5; i++ {
 		msg := fmt.Sprintf("Hello world, %d!\n", i)
 		fmt.Fprint(w, msg)
 		msgRcvd, err := reader.ReadString('\n')

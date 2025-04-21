@@ -35,7 +35,7 @@ func TestTransportErrorCodeStringer(t *testing.T) {
 }
 
 func TestIsCryptoError(t *testing.T) {
-	for i := range 0x100 {
+	for i := 0; i < 0x100; i++ {
 		require.False(t, TransportErrorCode(i).IsCryptoError())
 	}
 	for i := 0x100; i < 0x200; i++ {

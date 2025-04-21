@@ -757,7 +757,7 @@ func TestServerGracefulShutdown(t *testing.T) {
 	}
 
 	// all further streams are getting rejected
-	for range 3 {
+	for i := 0; i < 3; i++ {
 		str, err := clientConn.OpenStream()
 		require.NoError(t, err)
 		_, _ = str.Write(encodeRequest(t, httptest.NewRequest(http.MethodGet, "https://www.example.com", nil)))

@@ -92,7 +92,7 @@ func testPacketDrops(t *testing.T, direction protocol.Perspective) {
 		require.NoError(t, err)
 		errChan := make(chan error, 1)
 		go func() {
-			for i := range numMessages {
+			for i := 0; i < numMessages; i++ {
 				time.Sleep(messageInterval)
 				if _, err := serverStr.Write([]byte{uint8(i + 1)}); err != nil {
 					errChan <- err
@@ -103,7 +103,7 @@ func testPacketDrops(t *testing.T, direction protocol.Perspective) {
 
 		str, err := conn.AcceptUniStream(ctx)
 		require.NoError(t, err)
-		for i := range numMessages {
+		for i := 0; i < numMessages; i++ {
 			b := []byte{0}
 			n, err := str.Read(b)
 			require.NoError(t, err)

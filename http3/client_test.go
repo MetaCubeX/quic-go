@@ -192,7 +192,7 @@ func TestClientRequestError(t *testing.T) {
 
 	req, err := http.NewRequest(http.MethodGet, "http://quic-go.net", nil)
 	require.NoError(t, err)
-	for range 1000 {
+	for i := 0; i < 1000; i++ {
 		req.Header.Add(randomString(50), randomString(50))
 	}
 
@@ -406,7 +406,7 @@ func testClient1xxHandling(t *testing.T, numEarlyHints int, terminalStatus int, 
 	rw := newResponseWriter(newStream(rstr, nil, nil, func(io.Reader, *headersFrame) error { return nil }, nil), nil, false, nil)
 	rw.header.Add("Link", "foo")
 	rw.header.Add("Link", "bar")
-	for range numEarlyHints {
+	for i := 0; i < numEarlyHints; i++ {
 		rw.WriteHeader(http.StatusEarlyHints)
 	}
 	rw.WriteHeader(terminalStatus)
@@ -663,7 +663,7 @@ func TestClientConnGoAwayConcurrent(t *testing.T) {
 	}
 
 	// Consume both streams the server allows, but keep their receive sides open.
-	for range 2 {
+	for i := 0; i < 2; i++ {
 		str, err := cc.OpenRequestStream(context.Background())
 		require.NoError(t, err)
 		require.NoError(t, str.Close())
@@ -680,7 +680,7 @@ func TestClientConnGoAwayConcurrent(t *testing.T) {
 
 	// Both of these calls will block in OpenStreamSync.
 	errChan := make(chan error, 2)
-	for range 2 {
+	for i := 0; i < 2; i++ {
 		go func() {
 			str, err := cc.OpenRequestStream(context.Background())
 			if err == nil {
@@ -703,7 +703,7 @@ func TestClientConnGoAwayConcurrent(t *testing.T) {
 
 	// The GOAWAY stream ID only applies to requests already in flight. Even though
 	// stream 8 would be below the limit, no new request stream may be opened.
-	for range 2 {
+	for i := 0; i < 2; i++ {
 		select {
 		case err := <-errChan:
 			require.ErrorIs(t, err, errGoAway)

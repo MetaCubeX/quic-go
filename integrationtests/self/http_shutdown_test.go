@@ -319,7 +319,7 @@ func TestGracefulShutdownPendingStreams(t *testing.T) {
 	}
 
 	// make sure that the server rejects further requests
-	for range 3 {
+	for i := 0; i < 3; i++ {
 		str, err := conn.OpenStreamSync(ctx)
 		require.NoError(t, err)
 		str.Write([]byte("foobar"))
@@ -479,7 +479,7 @@ func testHTTP3ListenerClosing(t *testing.T, graceful, useApplicationListener boo
 			}
 		}()
 
-		for range 2 {
+		for i := 0; i < 2; i++ {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
 			require.ErrorIs(t, dial(t, ctx, u), &http3.Error{ErrorCode: 1337, Remote: true})

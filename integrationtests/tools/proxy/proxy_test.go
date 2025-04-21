@@ -165,7 +165,7 @@ func TestDropIncomingPackets(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	for range numPackets / 2 {
+	for i := 0; i < numPackets/2; i++ {
 		select {
 		case <-serverReceivedPackets:
 		case <-time.After(time.Second):
@@ -221,7 +221,7 @@ func TestDropOutgoingPackets(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	for range numPackets / 2 {
+	for i := 0; i < numPackets/2; i++ {
 		select {
 		case <-clientReceivedPackets:
 		case <-time.After(time.Second):
@@ -346,13 +346,13 @@ func TestConstantDelay(t *testing.T) { // no reordering expected here
 	require.NoError(t, err)
 
 	// send 100 packets
-	for i := range 100 {
+	for i := 0; i < 100; i++ {
 		_, err := clientConn.Write(makePacket(t, protocol.PacketNumber(i), []byte("foobar"+strconv.Itoa(i))))
 		require.NoError(t, err)
 	}
 	require.Eventually(t, func() bool { return len(serverReceivedPackets) == 100 }, 5*time.Second, 10*time.Millisecond)
 	timeout := time.After(5 * time.Second)
-	for i := range 100 {
+	for i := 0; i < 100; i++ {
 		select {
 		case packet := <-serverReceivedPackets:
 			require.Equal(t, protocol.PacketNumber(i), readPacketNumber(t, packet))
@@ -406,7 +406,7 @@ func TestDelayOutgoingPackets(t *testing.T) {
 		require.NoError(t, err)
 	}
 	// the packets should have arrived immediately at the server
-	for range numPackets {
+	for i := 0; i < numPackets; i++ {
 		select {
 		case <-serverReceivedPackets:
 		case <-time.After(time.Second):

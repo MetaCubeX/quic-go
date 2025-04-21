@@ -338,7 +338,7 @@ func TestEncoderComprehensive(t *testing.T) {
 	enc := jsontext.NewEncoder(buf)
 	require.NoError(t, encode(enc))
 
-	for i := range buf.Len() {
+	for i := 0; i < buf.Len(); i++ {
 		enc := jsontext.NewEncoder(&errorWriter{N: i})
 		require.ErrorIs(t, encode(enc), assert.AnError)
 	}

@@ -25,7 +25,7 @@ func getAckedPackets(pns ...protocol.PacketNumber) []packetWithPacketNumber {
 func sendECNTestingPackets(t *testing.T, ecnTracker *ecnTracker, recorder *events.Recorder) {
 	t.Helper()
 
-	for i := range protocol.PacketNumber(9) {
+	for i := protocol.PacketNumber(0); i < 9; i++ {
 		require.Equal(t, protocol.ECT0, ecnTracker.Mode())
 		// do this twice to make sure only sent packets are counted
 		require.Equal(t, protocol.ECT0, ecnTracker.Mode())
@@ -55,13 +55,13 @@ func TestECNTestingPacketsLoss(t *testing.T) {
 	sendECNTestingPackets(t, ecnTracker, &eventRecorder)
 
 	// send non-testing packets
-	for i := range protocol.PacketNumber(10) {
+	for i := protocol.PacketNumber(0); i < 10; i++ {
 		require.Equal(t, protocol.ECNNon, ecnTracker.Mode())
 		ecnTracker.SentPacket(10+i, protocol.ECNNon)
 	}
 
 	// lose all but one packet
-	for pn := range protocol.PacketNumber(10) {
+	for pn := protocol.PacketNumber(0); pn < 10; pn++ {
 		if pn == 4 {
 			continue
 		}
@@ -89,7 +89,7 @@ func TestECNValidationInTestingState(t *testing.T) {
 	var eventRecorder events.Recorder
 	ecnTracker := newECNTracker(utils.DefaultLogger, &eventRecorder)
 
-	for i := range 5 {
+	for i := 0; i < 5; i++ {
 		require.Equal(t, protocol.ECT0, ecnTracker.Mode())
 		ecnTracker.SentPacket(protocol.PacketNumber(i), protocol.ECT0)
 	}
@@ -119,7 +119,7 @@ func TestECNValidationInUnknownState(t *testing.T) {
 
 	sendECNTestingPackets(t, ecnTracker, &eventRecorder)
 
-	for i := range protocol.PacketNumber(10) {
+	for i := protocol.PacketNumber(0); i < 10; i++ {
 		require.Equal(t, protocol.ECNNon, ecnTracker.Mode())
 		pn := 10 + i
 		ecnTracker.SentPacket(pn, protocol.ECNNon)

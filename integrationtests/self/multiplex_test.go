@@ -296,7 +296,7 @@ func TestMultiplexingNonQUICPackets(t *testing.T) {
 
 	ticker := time.NewTicker(scaleDuration(200 * time.Microsecond))
 	defer ticker.Stop()
-	for range numPackets {
+	for i := 0; i < numPackets; i++ {
 		sendNonQUICPacket <- struct{}{}
 		sendQUICPacket <- struct{}{}
 		<-ticker.C

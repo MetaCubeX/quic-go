@@ -62,9 +62,10 @@ func (h *receivedPacketTracker) GetAckFrame() *wire.AckFrame {
 	ack.ECT0 = h.ect0
 	ack.ECT1 = h.ect1
 	ack.ECNCE = h.ecnce
-	for r := range h.packetHistory.Backward() {
+	h.packetHistory.Backward()(func(r interval) bool {
 		ack.AckRanges = append(ack.AckRanges, wire.AckRange{Smallest: r.Start, Largest: r.End})
-	}
+		return true
+	})
 
 	h.lastAck = ack
 	h.hasNewAck = false

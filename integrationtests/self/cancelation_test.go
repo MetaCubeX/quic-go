@@ -275,7 +275,7 @@ func testStreamCancellation(
 
 	timeout := time.After(time.Second)
 	var clientErrs, serverErrs int
-	for range numStreams {
+	for i := 0; i < numStreams; i++ {
 		select {
 		case err := <-serverErrChan:
 			if err != nil {
@@ -352,7 +352,7 @@ func TestCancelAcceptStream(t *testing.T) {
 		defer cancel()
 		ticker := time.NewTicker(5 * time.Millisecond)
 		defer ticker.Stop()
-		for range numStreams {
+		for i := 0; i < numStreams; i++ {
 			<-ticker.C
 			str, err := serverConn.OpenUniStreamSync(ctx)
 			if err != nil {
@@ -467,7 +467,7 @@ func TestCancelOpenStreamSync(t *testing.T) {
 	}()
 
 	clientErrChan := make(chan error, numStreams)
-	for range numStreams {
+	for i := 0; i < numStreams; i++ {
 		<-msg
 		str, err := conn.AcceptUniStream(context.Background())
 		require.NoError(t, err)
@@ -486,7 +486,7 @@ func TestCancelOpenStreamSync(t *testing.T) {
 	}
 
 	timeout := time.After(scaleDuration(2 * time.Second))
-	for range numStreams {
+	for i := 0; i < numStreams; i++ {
 		select {
 		case err := <-clientErrChan:
 			require.NoError(t, err)
@@ -573,7 +573,7 @@ func TestHeavyStreamCancellation(t *testing.T) {
 		}
 	}()
 
-	for range maxIncomingStreams {
+	for i := 0; i < maxIncomingStreams; i++ {
 		str, err := conn.OpenStreamSync(context.Background())
 		require.NoError(t, err)
 		handleStream(str)

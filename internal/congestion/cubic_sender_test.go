@@ -72,7 +72,7 @@ func (s *testCubicSender) SendAvailableSendWindowLen(packetLength protocol.ByteC
 func (s *testCubicSender) AckNPackets(n int) {
 	s.rttStats.UpdateRTT(60*time.Millisecond, 0)
 	s.sender.MaybeExitSlowStart()
-	for range n {
+	for i := 0; i < n; i++ {
 		s.ackedPacketNumber++
 		s.sender.OnPacketAcked(s.ackedPacketNumber, maxDatagramSize, s.bytesInFlight, s.clock.Now())
 	}
@@ -81,7 +81,7 @@ func (s *testCubicSender) AckNPackets(n int) {
 }
 
 func (s *testCubicSender) LoseNPacketsLen(n int, packetLength protocol.ByteCount) {
-	for range n {
+	for i := 0; i < n; i++ {
 		s.ackedPacketNumber++
 		s.sender.OnCongestionEvent(s.ackedPacketNumber, packetLength, s.bytesInFlight)
 	}
@@ -146,7 +146,7 @@ func TestCubicSenderApplicationLimitedSlowStart(t *testing.T) {
 	// Send exactly 10 packets and ensure the CWND ends at 14 packets.
 	const numberOfAcks = 5
 	sender.SendAvailableSendWindow()
-	for range numberOfAcks {
+	for i := 0; i < numberOfAcks; i++ {
 		sender.AckNPackets(2)
 	}
 
@@ -164,7 +164,7 @@ func TestCubicSenderExponentialSlowStart(t *testing.T) {
 	require.Zero(t, sender.sender.TimeUntilSend(0))
 
 	const numberOfAcks = 20
-	for range numberOfAcks {
+	for i := 0; i < numberOfAcks; i++ {
 		// Send our full send window.
 		sender.SendAvailableSendWindow()
 		sender.AckNPackets(2)
@@ -179,7 +179,7 @@ func TestCubicSenderSlowStartPacketLoss(t *testing.T) {
 	sender := newTestCubicSender(false)
 
 	const numberOfAcks = 10
-	for range numberOfAcks {
+	for i := 0; i < numberOfAcks; i++ {
 		// Send our full send window.
 		sender.SendAvailableSendWindow()
 		sender.AckNPackets(2)
@@ -227,7 +227,7 @@ func TestCubicSenderSlowStartPacketLossPRR(t *testing.T) {
 	// Test based on the first example in RFC6937.
 	// Ack 10 packets in 5 acks to raise the CWND to 20, as in the example.
 	const numberOfAcks = 5
-	for range numberOfAcks {
+	for i := 0; i < numberOfAcks; i++ {
 		// Send our full send window.
 		sender.SendAvailableSendWindow()
 		sender.AckNPackets(2)
@@ -250,7 +250,7 @@ func TestCubicSenderSlowStartPacketLossPRR(t *testing.T) {
 	// triggered the loss.
 	remainingPacketsInRecovery := sendWindowBeforeLoss/maxDatagramSize - 2
 
-	for range remainingPacketsInRecovery {
+	for i := protocol.ByteCount(0); i < remainingPacketsInRecovery; i++ {
 		sender.AckNPackets(1)
 		sender.SendAvailableSendWindow()
 		require.Equal(t, expectedSendWindow, sender.sender.GetCongestionWindow())
@@ -258,7 +258,7 @@ func TestCubicSenderSlowStartPacketLossPRR(t *testing.T) {
 
 	// We need to ack another window before we increase CWND by 1.
 	numberOfPacketsInWindow := expectedSendWindow / maxDatagramSize
-	for range numberOfPacketsInWindow {
+	for i := 0; i < int(numberOfPacketsInWindow); i++ {
 		sender.AckNPackets(1)
 		require.Equal(t, 1, sender.SendAvailableSendWindow())
 		require.Equal(t, expectedSendWindow, sender.sender.GetCongestionWindow())
@@ -277,7 +277,7 @@ func TestCubicSenderSlowStartBurstPacketLossPRR(t *testing.T) {
 	// PRR immediately.
 	// Ack 20 packets in 10 acks to raise the CWND to 30.
 	const numberOfAcks = 10
-	for range numberOfAcks {
+	for i := 0; i < numberOfAcks; i++ {
 		// Send our full send window.
 		sender.SendAvailableSendWindow()
 		sender.AckNPackets(2)
@@ -318,7 +318,7 @@ func TestCubicSenderSlowStartBurstPacketLossPRR(t *testing.T) {
 	require.Equal(t, 2, sender.SendAvailableSendWindow())
 
 	// Exit recovery and return to sending at the new rate.
-	for range numberOfAcks {
+	for i := 0; i < numberOfAcks; i++ {
 		sender.AckNPackets(1)
 		require.Equal(t, 1, sender.SendAvailableSendWindow())
 	}
@@ -359,7 +359,7 @@ func TestCubicSenderTCPCubicResetEpochOnQuiescence(t *testing.T) {
 	// Send a new window of data and ack all; cubic growth should occur.
 	savedCwnd = sender.sender.GetCongestionWindow()
 	numSent = sender.SendAvailableSendWindow()
-	for range numSent {
+	for i := 0; i < numSent; i++ {
 		sender.AckNPackets(1)
 	}
 	require.Less(t, savedCwnd, sender.sender.GetCongestionWindow())
@@ -401,7 +401,7 @@ func TestCubicSender1ConnectionCongestionAvoidanceAtEndOfRecovery(t *testing.T) 
 
 	// Ack 10 packets in 5 acks to raise the CWND to 20.
 	const numberOfAcks = 5
-	for range numberOfAcks {
+	for i := 0; i < numberOfAcks; i++ {
 		// Send our full send window.
 		sender.SendAvailableSendWindow()
 		sender.AckNPackets(2)
@@ -418,7 +418,7 @@ func TestCubicSender1ConnectionCongestionAvoidanceAtEndOfRecovery(t *testing.T) 
 
 	// No congestion window growth should occur in recovery phase, i.e., until the
 	// currently outstanding 20 packets are acked.
-	for range 10 {
+	for i := 0; i < 10; i++ {
 		// Send our full send window.
 		sender.SendAvailableSendWindow()
 		require.True(t, sender.sender.InRecovery())
@@ -463,7 +463,7 @@ func TestCubicSenderResetAfterConnectionMigration(t *testing.T) {
 
 	// Starts with slow start.
 	const numberOfAcks = 10
-	for range numberOfAcks {
+	for i := 0; i < numberOfAcks; i++ {
 		// Send our full send window.
 		sender.SendAvailableSendWindow()
 		sender.AckNPackets(2)

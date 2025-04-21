@@ -197,7 +197,7 @@ func TestTransportParameterNoMaxAckDelayIfDefault(t *testing.T) {
 	const num = 1000
 	var defaultLen, dataLen int
 	maxAckDelay := protocol.DefaultMaxAckDelay + time.Millisecond
-	for range num {
+	for j := 0; j < num; j++ {
 		dataDefault := (&TransportParameters{
 			MaxAckDelay:         protocol.DefaultMaxAckDelay,
 			StatelessResetToken: &protocol.StatelessResetToken{},
@@ -218,7 +218,7 @@ func TestTransportParameterNoMaxAckDelayIfDefault(t *testing.T) {
 func TestTransportParameterNoAckDelayExponentIfDefault(t *testing.T) {
 	const num = 1000
 	var defaultLen, dataLen int
-	for range num {
+	for j := 0; j < num; j++ {
 		dataDefault := (&TransportParameters{
 			AckDelayExponent:    protocol.DefaultAckDelayExponent,
 			StatelessResetToken: &protocol.StatelessResetToken{},

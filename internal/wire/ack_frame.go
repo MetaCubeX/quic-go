@@ -65,7 +65,7 @@ func parseAckFrame(frame *AckFrame, b []byte, typ FrameType, ackDelayExponent ui
 	frame.AckRanges = append(frame.AckRanges, AckRange{Smallest: smallest, Largest: largestAcked})
 
 	// read all the other ACK ranges
-	for range numBlocks {
+	for i := uint64(0); i < numBlocks; i++ {
 		g, l, err := quicvarint.Parse(b)
 		if err != nil {
 			return 0, replaceUnexpectedEOF(err)

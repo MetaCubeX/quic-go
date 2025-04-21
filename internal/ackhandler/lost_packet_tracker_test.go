@@ -47,9 +47,10 @@ func TestLostPacketTrackerDeleteBefore(t *testing.T) {
 
 	trackedPackets := func(lt *lostPacketTracker) []protocol.PacketNumber {
 		var pns []protocol.PacketNumber
-		for pn := range lt.All() {
+		lt.All()(func(pn protocol.PacketNumber, m monotime.Time) bool {
 			pns = append(pns, pn)
-		}
+			return true
+		})
 		return pns
 	}
 

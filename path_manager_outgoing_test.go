@@ -158,7 +158,7 @@ func TestPathManagerOutgoingRetransmissions(t *testing.T) {
 			took time.Duration
 		}
 		var results []result
-		for range 4 {
+		for j := 0; j < 4; j++ {
 			select {
 			case <-errChan:
 				t.Fatal("probing should not have completed")
@@ -203,7 +203,7 @@ func TestPathManagerOutgoingRetransmissions(t *testing.T) {
 
 		synctest.Wait()
 
-		for range 2 {
+		for j := 0; j < 2; j++ {
 			select {
 			case err := <-errChan:
 				require.NoError(t, err)

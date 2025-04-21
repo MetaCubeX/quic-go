@@ -54,7 +54,7 @@ func TestWritingStopping(t *testing.T) {
 	writer := fileSeq.AddProducer()
 	go fileSeq.Run()
 
-	for i := range 1000 {
+	for i := 0; i < 1000; i++ {
 		writer.RecordEvent(testEvent{message: fmt.Sprintf("test message %d", i)})
 	}
 
@@ -98,7 +98,7 @@ func TestRecordCloseRace(t *testing.T) {
 
 		w.block = true
 		const numEvents = eventChanSize + 1
-		for i := range numEvents {
+		for i := 0; i < numEvents; i++ {
 			producer.RecordEvent(testEvent{message: fmt.Sprintf("event %d", i)})
 		}
 
@@ -108,7 +108,7 @@ func TestRecordCloseRace(t *testing.T) {
 		close(w.unblock) // let Run() finish
 		producer.Close()
 
-		for i := range numEvents {
+		for i := 0; i < numEvents; i++ {
 			require.Contains(t, w.String(), fmt.Sprintf(`"message":"event %d"`, i))
 		}
 		require.Contains(t, w.String(), `"message":"last event"`)

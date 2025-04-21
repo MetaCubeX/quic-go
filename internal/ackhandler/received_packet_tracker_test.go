@@ -55,11 +55,11 @@ func TestAppDataReceivedPacketTrackerECN(t *testing.T) {
 
 	require.NoError(t, tr.ReceivedPacket(0, protocol.ECT0, monotime.Now(), true))
 	pn := protocol.PacketNumber(1)
-	for range 2 {
+	for j := 0; j < 2; j++ {
 		require.NoError(t, tr.ReceivedPacket(pn, protocol.ECT1, monotime.Now(), true))
 		pn++
 	}
-	for range 3 {
+	for j := 0; j < 3; j++ {
 		require.NoError(t, tr.ReceivedPacket(pn, protocol.ECNCE, monotime.Now(), true))
 		pn++
 	}

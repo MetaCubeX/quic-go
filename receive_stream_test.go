@@ -212,7 +212,7 @@ func TestReceiveStreamReadOverlappingData(t *testing.T) {
 
 	// receive the same frame multiple times
 	now := monotime.Now()
-	for range 3 {
+	for j := 0; j < 3; j++ {
 		require.NoError(t, str.handleStreamFrame(&wire.StreamFrame{Data: []byte{0xde, 0xad, 0xbe, 0xef}}, now))
 	}
 	b := make([]byte, 4)
@@ -979,7 +979,7 @@ func TestReceiveStreamConcurrentReads(t *testing.T) {
 			n   int
 			err error
 		}, num)
-		for range num {
+		for j := 0; j < num; j++ {
 			go func() {
 				n, err := str.Read(make([]byte, 8))
 				resultChan <- struct {
@@ -992,7 +992,7 @@ func TestReceiveStreamConcurrentReads(t *testing.T) {
 		synctest.Wait()
 
 		var bytesRead int
-		for range num {
+		for j := 0; j < num; j++ {
 			select {
 			case res := <-resultChan:
 				bytesRead += res.n

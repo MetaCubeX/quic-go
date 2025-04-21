@@ -225,7 +225,7 @@ func randomValues(maxValue uint64) []benchmarkValue {
 
 	const num = 1025
 	bv := make([]benchmarkValue, num)
-	for i := range num {
+	for i := 0; i < num; i++ {
 		v := r.Uint64() % maxValue
 		bv[i].v = v
 		bv[i].b = Append([]byte{}, v)

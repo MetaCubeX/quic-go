@@ -286,7 +286,7 @@ func TestClosedConnectionsInAcceptQueue(t *testing.T) {
 
 	// accept all connections, and find the closed one
 	var closedConn *quic.Conn
-	for range 2 {
+	for i := 0; i < 2; i++ {
 		conn, err := server.Accept(ctx)
 		require.NoError(t, err)
 		if conn.Context().Err() != nil {
@@ -313,7 +313,7 @@ func TestServerAcceptQueueOverflow(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	// fill up the accept queue
-	for range protocol.MaxAcceptQueueSize {
+	for i := 0; i < protocol.MaxAcceptQueueSize; i++ {
 		conn, err := dialer.Dial(ctx, server.Addr(), getTLSClientConfig(), getQuicConfig(nil))
 		require.NoError(t, err)
 		defer conn.CloseWithError(0, "")

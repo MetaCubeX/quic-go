@@ -39,7 +39,7 @@ func TestSkippingPacketNumberGenerator(t *testing.T) {
 
 	var last protocol.PacketNumber
 	var skipped bool
-	for i := range maxPeriod {
+	for i := protocol.PacketNumber(0); i < maxPeriod; i++ {
 		didSkip, num := png.Pop()
 		if didSkip {
 			skipped = true
@@ -64,7 +64,7 @@ func TestSkippingPacketNumberGeneratorPeriods(t *testing.T) {
 	periods := make([][]protocol.PacketNumber, rep)
 	expectedPeriods := []protocol.PacketNumber{25, 50, 100, 200, 300, 300, 300}
 
-	for i := range rep {
+	for i := 0; i < rep; i++ {
 		png := newSkippingPacketNumberGenerator(initialPN, initialPeriod, maxPeriod)
 		lastSkip := initialPN
 		for len(periods[i]) < len(expectedPeriods) {
@@ -80,7 +80,7 @@ func TestSkippingPacketNumberGeneratorPeriods(t *testing.T) {
 
 	for j := range expectedPeriods {
 		var average float64
-		for i := range rep {
+		for i := 0; i < rep; i++ {
 			average += float64(periods[i][j]) / float64(len(periods))
 		}
 		t.Logf("Period %d: %.2f (expected %d)\n", j, average, expectedPeriods[j])
