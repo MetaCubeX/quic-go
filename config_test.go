@@ -130,6 +130,8 @@ func configWithNonZeroNonFunctionFields(t *testing.T) *Config {
 			f.Set(reflect.ValueOf(true))
 		case "MaxDatagramFrameSize":
 			f.Set(reflect.ValueOf(int64(0)))
+		case "DisablePathManager":
+			f.Set(reflect.ValueOf(false))
 		default:
 			t.Fatalf("all fields must be accounted for, but saw unknown field %q", fn)
 		}
