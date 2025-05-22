@@ -3,7 +3,6 @@
 package quic
 
 import (
-	"encoding/binary"
 	"errors"
 	"log"
 	"net"
@@ -220,7 +219,7 @@ func (c *oobConn) ReadPacket() (receivedPacket, error) {
 				if len(body) != 4 {
 					return receivedPacket{}, errors.New("invalid IPV6_TCLASS size")
 				}
-				bits := uint8(binary.NativeEndian.Uint32(body)) & ecnMask
+				bits := uint8(nativeEndian.Uint32(body)) & ecnMask
 				p.ecn = protocol.ParseECNHeaderBits(bits)
 			case unix.IPV6_PKTINFO:
 				// struct in6_pktinfo {
@@ -229,7 +228,7 @@ func (c *oobConn) ReadPacket() (receivedPacket, error) {
 				// };
 				if len(body) == 20 {
 					p.info.addr = netip.AddrFrom16(*(*[16]byte)(body[:16])).Unmap()
-					p.info.ifIndex = binary.NativeEndian.Uint32(body[16:])
+					p.info.ifIndex = nativeEndian.Uint32(body[16:])
 				} else {
 					invalidCmsgOnceV6.Do(func() {
 						log.Printf("Received invalid IPv6 packet info control message: %+x. "+
@@ -333,6 +332,6 @@ func appendIPv6ECNMsg(b []byte, val protocol.ECN) []byte {
 
 	// UnixRights uses the private `data` method, but I *think* this achieves the same goal.
 	offset := startLen + unix.CmsgSpace(0)
-	binary.NativeEndian.PutUint32(b[offset:offset+dataLen], uint32(val.ToHeaderBits()))
+	nativeEndian.PutUint32(b[offset:offset+dataLen], uint32(val.ToHeaderBits()))
 	return b
 }
