@@ -225,6 +225,7 @@ func testStreamCancellation(
 	serverErrChan := make(chan *cancellationErr, numStreams)
 	go func() {
 		for _, doCancel := range actions {
+			doCancel := doCancel
 			str, err := serverConn.OpenUniStreamSync(ctx)
 			if err != nil {
 				serverErrChan <- &cancellationErr{StreamID: protocol.InvalidStreamID, Err: fmt.Errorf("opening stream failed: %w", err)}
@@ -251,6 +252,7 @@ func testStreamCancellation(
 
 	clientErrChan := make(chan *cancellationErr, numStreams)
 	for _, doCancel := range actions {
+		doCancel := doCancel
 		str, err := conn.AcceptUniStream(ctx)
 		require.NoError(t, err)
 		go func(str *quic.ReceiveStream) {
