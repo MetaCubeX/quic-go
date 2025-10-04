@@ -2,7 +2,6 @@ package ackhandler
 
 import (
 	"golang.org/x/exp/slices"
-	"iter"
 
 	"github.com/quic-go/quic-go/internal/monotime"
 	"github.com/quic-go/quic-go/internal/protocol"
@@ -46,7 +45,7 @@ func (t *lostPacketTracker) Delete(pn protocol.PacketNumber) {
 	})
 }
 
-func (t *lostPacketTracker) All() iter.Seq2[protocol.PacketNumber, monotime.Time] {
+func (t *lostPacketTracker) All() func(yield func(protocol.PacketNumber, monotime.Time) bool) {
 	return func(yield func(protocol.PacketNumber, monotime.Time) bool) {
 		for _, p := range t.lostPackets {
 			if !yield(p.PacketNumber, p.SendTime) {

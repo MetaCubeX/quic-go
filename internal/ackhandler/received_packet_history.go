@@ -2,7 +2,6 @@ package ackhandler
 
 import (
 	"golang.org/x/exp/slices"
-	"iter"
 
 	"github.com/quic-go/quic-go/internal/protocol"
 	"github.com/quic-go/quic-go/internal/utils"
@@ -111,7 +110,7 @@ func (h *receivedPacketHistory) DeleteBelow(p protocol.PacketNumber) {
 }
 
 // Backward returns an iterator over the ranges in reverse order
-func (h *receivedPacketHistory) Backward() iter.Seq[interval] {
+func (h *receivedPacketHistory) Backward() func(yield func(interval) bool) {
 	return func(yield func(interval) bool) {
 		for i := len(h.ranges) - 1; i >= 0; i-- {
 			if !yield(h.ranges[i]) {
