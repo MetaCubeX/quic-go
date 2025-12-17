@@ -13,6 +13,7 @@ import (
 
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3/qlog"
+	"github.com/quic-go/quic-go/internal/utils"
 	"github.com/quic-go/quic-go/qlogwriter"
 	"github.com/quic-go/quic-go/quicvarint"
 )
@@ -68,7 +69,7 @@ func newRawConn(
 		controlStrHandler: controlStrHandler,
 	}
 	if qlogger != nil {
-		context.AfterFunc(quicConn.Context(), c.closeQlogger)
+		utils.AfterFunc(quicConn.Context(), c.closeQlogger)
 	}
 	return c
 }

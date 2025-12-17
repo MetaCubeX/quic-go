@@ -15,6 +15,7 @@ import (
 	"github.com/metacubex/qpack"
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3/qlog"
+	"github.com/quic-go/quic-go/internal/utils"
 	"github.com/quic-go/quic-go/qlogwriter"
 )
 
@@ -155,7 +156,7 @@ func (c *ClientConn) openRequestStream(
 
 	openCtx, cancel := context.WithCancelCause(ctx)
 	// A request blocked in OpenStreamSync has no request stream yet, so it is not in flight.
-	stop := context.AfterFunc(c.goAwayCtx, func() { cancel(errGoAway) })
+	stop := utils.AfterFunc(c.goAwayCtx, func() { cancel(errGoAway) })
 	str, err := c.conn.OpenStreamSync(openCtx)
 	stop()
 	cancel(nil)

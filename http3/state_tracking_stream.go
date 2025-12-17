@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/quic-go/quic-go"
+	"github.com/quic-go/quic-go/internal/utils"
 )
 
 const streamDatagramQueueLen = 32
@@ -46,7 +47,7 @@ func newStateTrackingStream(s *quic.Stream, clearer streamClearer, sendDatagram 
 		hasData:      make(chan struct{}, 1),
 	}
 
-	context.AfterFunc(s.Context(), func() {
+	utils.AfterFunc(s.Context(), func() {
 		t.closeSend(context.Cause(s.Context()))
 	})
 

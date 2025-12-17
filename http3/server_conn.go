@@ -12,6 +12,7 @@ import (
 
 	"github.com/metacubex/qpack"
 	"github.com/quic-go/quic-go"
+	"github.com/quic-go/quic-go/internal/utils"
 	"github.com/quic-go/quic-go/qlogwriter"
 )
 
@@ -189,7 +190,7 @@ func (c *RawServerConn) handleRequestStream(str *stateTrackingStream) {
 
 	ctx, cancel := context.WithCancel(connCtx)
 	req = req.WithContext(ctx)
-	context.AfterFunc(str.Context(), cancel)
+	utils.AfterFunc(str.Context(), cancel)
 
 	r := newResponseWriter(hstr, conn, req.Method == http.MethodHead, c.logger)
 	handler := c.requestHandler
