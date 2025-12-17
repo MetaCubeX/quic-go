@@ -264,8 +264,7 @@ func benchmarkRead(b *testing.B, inputs []benchmarkValue, wrapBytesReader bool) 
 		vr = NewReader(r)
 	}
 
-	var i int
-	for b.Loop() {
+	for i := 0; i < b.N; i++ {
 		index := i % len(inputs)
 		i++
 		r.Reset(inputs[index].b)
@@ -287,8 +286,7 @@ func BenchmarkParse(b *testing.B) {
 }
 
 func benchmarkParse(b *testing.B, inputs []benchmarkValue) {
-	var i int
-	for b.Loop() {
+	for i := 0; i < b.N; i++ {
 		index := i % len(inputs)
 		i++
 		val, n, err := Parse(inputs[index].b)
@@ -314,8 +312,7 @@ func BenchmarkAppend(b *testing.B) {
 func benchmarkAppend(b *testing.B, inputs []benchmarkValue) {
 	buf := make([]byte, 8)
 
-	var i int
-	for b.Loop() {
+	for i := 0; i < b.N; i++ {
 		buf = buf[:0]
 		index := i % len(inputs)
 		i++
@@ -336,9 +333,8 @@ func BenchmarkAppendWithLen(b *testing.B) {
 
 func benchmarkAppendWithLen(b *testing.B, inputs []benchmarkValue) {
 	buf := make([]byte, 8)
-
-	var i int
-	for b.Loop() {
+	
+	for i := 0; i < b.N; i++ {
 		buf = buf[:0]
 		index := i % len(inputs)
 		i++

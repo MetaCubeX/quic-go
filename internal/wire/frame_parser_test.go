@@ -836,7 +836,7 @@ func benchmarkFrames(b *testing.B, frames ...Frame) {
 	parser := NewFrameParser(true, true, true)
 	parser.SetAckDelayExponent(3)
 
-	for b.Loop() {
+	for i := 0; i < b.N; i++ {
 		parseFrames(b, parser, buf, frames...)
 	}
 }

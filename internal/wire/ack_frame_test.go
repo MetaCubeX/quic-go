@@ -598,7 +598,7 @@ func benchmarkACKSerialization(b *testing.B, f *AckFrame) {
 	numRanges := len(f.AckRanges)
 
 	buf := make([]byte, 0, 1024)
-	for b.Loop() {
+	for i := 0; i < b.N; i++ {
 		buf = buf[:0]
 		var err error
 		f.Truncate(1000, protocol.Version1)

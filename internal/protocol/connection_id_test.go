@@ -72,7 +72,7 @@ func TestConnectionIDZeroValue(t *testing.T) {
 func BenchmarkConnectionIDStringer(b *testing.B) {
 	c := ParseConnectionID([]byte{0xde, 0xad, 0xbe, 0xef, 0x42})
 	b.ReportAllocs()
-	for b.Loop() {
+	for i := 0; i < b.N; i++ {
 		_ = c.String()
 	}
 }

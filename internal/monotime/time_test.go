@@ -66,13 +66,13 @@ func TestConversions(t *testing.T) {
 
 func BenchmarkNow(b *testing.B) {
 	b.Run("Now", func(b *testing.B) {
-		for b.Loop() {
+		for i := 0; i < b.N; i++ {
 			_ = Now()
 		}
 	})
 
 	b.Run("time.Now", func(b *testing.B) {
-		for b.Loop() {
+		for i := 0; i < b.N; i++ {
 			_ = time.Now()
 		}
 	})

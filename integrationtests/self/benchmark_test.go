@@ -34,7 +34,7 @@ func BenchmarkHandshake(b *testing.B) {
 	tr := &quic.Transport{Conn: newUDPConnLocalhost(b)}
 	defer tr.Close()
 
-	for b.Loop() {
+	for i := 0; i < b.N; i++ {
 		c, err := tr.Dial(context.Background(), ln.Addr(), tlsClientConfig, nil)
 		if err != nil {
 			b.Fatalf("error dialing: %v", err)
@@ -72,7 +72,7 @@ func BenchmarkStreamChurn(b *testing.B) {
 		}
 	}()
 
-	for b.Loop() {
+	for i := 0; i < b.N; i++ {
 		str, err := conn.OpenStreamSync(context.Background())
 		if err != nil {
 			b.Fatalf("error opening stream: %v", err)
@@ -124,7 +124,7 @@ func benchmarkTransfer(b *testing.B, data []byte) {
 
 	buf := make([]byte, len(data))
 
-	for b.Loop() {
+	for i := 0; i < b.N; i++ {
 		c, err := tr.Dial(context.Background(), ln.Addr(), tlsClientConfig, nil)
 		if err != nil {
 			b.Fatalf("error dialing: %v", err)

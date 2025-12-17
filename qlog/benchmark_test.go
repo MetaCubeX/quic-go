@@ -38,9 +38,8 @@ func BenchmarkConnectionTracing(b *testing.B) {
 	rttStats.UpdateRTT(1337*time.Millisecond, 0)
 	rttStats.UpdateRTT(1000*time.Millisecond, 10*time.Millisecond)
 	rttStats.UpdateRTT(800*time.Millisecond, 100*time.Millisecond)
-
-	var i int
-	for b.Loop() {
+	
+	for i := 0; i < b.N; i++ {
 		i++
 		tracer.RecordEvent(&PacketSent{
 			Header: PacketHeader{

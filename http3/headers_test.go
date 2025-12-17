@@ -637,7 +637,7 @@ func BenchmarkRequestFromHeaders(b *testing.B) {
 	}
 
 	dec := qpack.NewDecoder()
-	for b.Loop() {
+	for i := 0; i < b.N; i++ {
 		decodeFn := dec.Decode(buf.Bytes())
 		if _, err := requestFromHeaders(decodeFn, math.MaxInt, nil); err != nil {
 			b.Fatalf("failed to parse request: %v", err)

@@ -1742,7 +1742,7 @@ func benchmarkSendAndAcknowledge(b *testing.B, ackEvery, inFlight int) {
 
 	var counter int
 	ranges := make([]wire.AckRange, 0, ackEvery)
-	for b.Loop() {
+	for i := 0; i < b.N; i++ {
 		counter++
 		pn := sph.PopPacketNumber(protocol.Encryption1RTT)
 		sph.SentPacket(

@@ -1003,7 +1003,7 @@ func benchmarkTransportParameters(b *testing.B, withPreferredAddress bool) {
 	data := params.Marshal(protocol.PerspectiveServer)
 
 	var p TransportParameters
-	for b.Loop() {
+	for i := 0; i < b.N; i++ {
 		if err := p.Unmarshal(data, protocol.PerspectiveServer); err != nil {
 			b.Fatal(err)
 		}

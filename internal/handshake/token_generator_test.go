@@ -132,7 +132,7 @@ func BenchmarkTokenGeneratorDecodeToken(b *testing.B) {
 	tokenEnc, err := tokenGen.NewRetryToken(addr, connID1, connID2)
 	require.NoError(b, err)
 
-	for b.Loop() {
+	for i := 0; i < b.N; i++ {
 		if _, err := tokenGen.DecodeToken(tokenEnc); err != nil {
 			b.Fatal(err)
 		}

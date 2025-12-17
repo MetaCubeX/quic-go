@@ -257,7 +257,7 @@ func BenchmarkParseExtendedHeader(b *testing.B) {
 	}
 	data = append(data, make([]byte, 1231)...)
 
-	for b.Loop() {
+	for i := 0; i < b.N; i++ {
 		hdr, _, _, err := ParsePacket(data)
 		if err != nil {
 			b.Fatal(err)

@@ -138,8 +138,7 @@ func BenchmarkPacer(b *testing.B) {
 
 	now := monotime.Now()
 
-	var i int
-	for b.Loop() {
+	for i := 0; i < b.N; i++ {
 		i++
 		for p.Budget(now) > 0 {
 			p.SentPacket(now, initialMaxDatagramSize)

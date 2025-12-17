@@ -97,7 +97,7 @@ func BenchmarkComposeVersionNegotiationPacket(b *testing.B) {
 	destConnID := protocol.ArbitraryLenConnectionID{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0xa, 0xb, 0xc, 0xd}
 	srcConnID := protocol.ArbitraryLenConnectionID{10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
 
-	for b.Loop() {
+	for i := 0; i < b.N; i++ {
 		ComposeVersionNegotiation(destConnID, srcConnID, supportedVersions)
 	}
 }
