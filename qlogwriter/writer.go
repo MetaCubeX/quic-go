@@ -3,9 +3,9 @@ package qlogwriter
 import (
 	"bytes"
 	"fmt"
+	"golang.org/x/exp/slices"
 	"io"
 	"log"
-	"slices"
 	"sync"
 	"time"
 

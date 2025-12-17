@@ -2,9 +2,9 @@ package quic
 
 import (
 	"fmt"
+	"golang.org/x/exp/slices"
 	mrand "math/rand/v2"
 	"os"
-	"slices"
 	"strconv"
 	"strings"
 	"testing"

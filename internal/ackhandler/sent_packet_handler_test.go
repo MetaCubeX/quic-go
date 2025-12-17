@@ -3,8 +3,8 @@ package ackhandler
 import (
 	"encoding/binary"
 	"fmt"
+	"golang.org/x/exp/slices"
 	"math/rand/v2"
-	"slices"
 	"testing"
 	"time"
 

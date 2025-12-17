@@ -3,9 +3,9 @@ package quicproxy
 import (
 	"errors"
 	"fmt"
+	"golang.org/x/exp/slices"
 	"net"
 	"os"
-	"slices"
 	"sync"
 	"time"
 

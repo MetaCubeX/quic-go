@@ -2,7 +2,7 @@ package quic
 
 import (
 	"fmt"
-	"slices"
+	"golang.org/x/exp/slices"
 
 	"github.com/quic-go/quic-go/internal/protocol"
 	"github.com/quic-go/quic-go/internal/qerr"

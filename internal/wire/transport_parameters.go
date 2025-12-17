@@ -5,10 +5,10 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"golang.org/x/exp/slices"
 	"io"
 	"math"
 	"net/netip"
-	"slices"
 	"time"
 
 	"github.com/quic-go/quic-go/internal/protocol"

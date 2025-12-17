@@ -2,8 +2,8 @@ package quic
 
 import (
 	"crypto/rand"
+	"golang.org/x/exp/slices"
 	"net"
-	"slices"
 	"time"
 
 	"github.com/quic-go/quic-go/internal/ackhandler"

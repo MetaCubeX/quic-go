@@ -3,9 +3,9 @@ package quic
 import (
 	"errors"
 	"fmt"
+	"golang.org/x/exp/slices"
 	"io"
 	"os"
-	"slices"
 	"strconv"
 
 	"github.com/quic-go/quic-go/internal/protocol"

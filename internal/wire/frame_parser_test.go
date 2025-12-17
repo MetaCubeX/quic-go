@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"crypto/rand"
 	"fmt"
+	"golang.org/x/exp/slices"
 	"io"
-	"slices"
 	"testing"
 	"time"
 

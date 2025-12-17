@@ -2,8 +2,8 @@ package simnet
 
 import (
 	"errors"
+	"golang.org/x/exp/slices"
 	"net"
-	"slices"
 	"sync"
 	"sync/atomic"
 	"time"

@@ -1,9 +1,9 @@
 package quic
 
 import (
+	"golang.org/x/exp/slices"
 	"net"
 	"net/netip"
-	"slices"
 
 	"github.com/quic-go/quic-go/internal/protocol"
 	"github.com/quic-go/quic-go/internal/wire"

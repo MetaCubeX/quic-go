@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/metacubex/http"
+	"golang.org/x/exp/slices"
 	"io"
 	"net/textproto"
 	"net/url"
-	"slices"
 	"strconv"
 	"strings"
 

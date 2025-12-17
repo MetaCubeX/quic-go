@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"errors"
-	"slices"
+	"golang.org/x/exp/slices"
 	"sync"
 	"sync/atomic"
 	"time"

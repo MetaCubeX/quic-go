@@ -1,9 +1,9 @@
 package wire
 
 import (
+	"golang.org/x/exp/slices"
 	"io"
 	"math"
-	"slices"
 	"testing"
 	"time"
 

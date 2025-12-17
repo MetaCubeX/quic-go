@@ -1,8 +1,8 @@
 package events
 
 import (
+	"golang.org/x/exp/slices"
 	"reflect"
-	"slices"
 	"sync"
 	"time"
 

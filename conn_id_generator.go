@@ -2,7 +2,7 @@ package quic
 
 import (
 	"fmt"
-	"slices"
+	"golang.org/x/exp/slices"
 	"time"
 
 	"github.com/quic-go/quic-go/internal/monotime"

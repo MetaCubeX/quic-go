@@ -1,7 +1,7 @@
 package protocol
 
 import (
-	"slices"
+	"golang.org/x/exp/slices"
 	"testing"
 
 	"github.com/stretchr/testify/require"

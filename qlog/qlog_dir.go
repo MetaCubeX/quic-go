@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"golang.org/x/exp/slices"
 	"log"
 	"os"
-	"slices"
 	"strings"
 
 	"github.com/quic-go/quic-go/internal/utils"
