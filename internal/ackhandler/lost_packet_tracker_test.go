@@ -1,7 +1,6 @@
 package ackhandler
 
 import (
-	"maps"
 	"testing"
 	"time"
 
@@ -22,7 +21,7 @@ func TestLostPacketTracker(t *testing.T) {
 		1: start,
 		5: start.Add(time.Second),
 		8: start.Add(2 * time.Second),
-	}, maps.Collect(lt.All()))
+	}, mapsCollect(lt.All()))
 
 	// Lose 2 more packets. The first one should be removed.
 	lt.Add(10, start.Add(3*time.Second))
@@ -32,14 +31,14 @@ func TestLostPacketTracker(t *testing.T) {
 		8:  start.Add(2 * time.Second),
 		10: start.Add(3 * time.Second),
 		11: start.Add(4 * time.Second),
-	}, maps.Collect(lt.All()))
+	}, mapsCollect(lt.All()))
 
 	lt.Delete(5)
 	lt.Delete(10)
 	require.Equal(t, map[protocol.PacketNumber]monotime.Time{
 		8:  start.Add(2 * time.Second),
 		11: start.Add(4 * time.Second),
-	}, maps.Collect(lt.All()))
+	}, mapsCollect(lt.All()))
 }
 
 func TestLostPacketTrackerDeleteBefore(t *testing.T) {
