@@ -3,13 +3,14 @@ package self_test
 import (
 	"context"
 	"fmt"
-	"github.com/metacubex/http"
-	"github.com/metacubex/http/httptrace"
-	"github.com/metacubex/tls"
 	"net"
 	"net/textproto"
 	"testing"
 	"time"
+
+	"github.com/metacubex/http"
+	"github.com/metacubex/http/httptrace"
+	"github.com/metacubex/tls"
 
 	"github.com/quic-go/quic-go/http3"
 	"github.com/stretchr/testify/require"
@@ -38,14 +39,6 @@ func TestHTTPClientTrace(t *testing.T) {
 		Got1xxResponse: func(code int, header textproto.MIMEHeader) error {
 			eventQueue <- event{Key: "Got1xxResponse", Args: code}
 			return nil
-		},
-		DNSStart: func(di httptrace.DNSStartInfo) { eventQueue <- event{Key: "DNSStart", Args: di} },
-		DNSDone:  func(di httptrace.DNSDoneInfo) { eventQueue <- event{Key: "DNSDone", Args: di} },
-		ConnectStart: func(network, addr string) {
-			eventQueue <- event{Key: "ConnectStart", Args: map[string]string{"network": network, "addr": addr}}
-		},
-		ConnectDone: func(network, addr string, err error) {
-			eventQueue <- event{Key: "ConnectDone", Args: map[string]any{"network": network, "addr": addr, "err": err}}
 		},
 		TLSHandshakeStart: func() { eventQueue <- event{Key: "TLSHandshakeStart"} },
 		TLSHandshakeDone: func(state tls.ConnectionState, err error) {
@@ -129,8 +122,8 @@ func TestHTTPClientTrace(t *testing.T) {
 	}
 	require.Equal(t,
 		[]string{
-			"GetConn", "DNSStart", "DNSDone", "ConnectStart", "TLSHandshakeStart", "TLSHandshakeDone",
-			"ConnectDone", "GotConn", "WroteHeaderField", "WroteHeaders", "WroteRequest",
+			"GetConn", "TLSHandshakeStart", "TLSHandshakeDone",
+			"GotConn", "WroteHeaderField", "WroteHeaders", "WroteRequest",
 			"GotFirstResponseByte", "Got1xxResponse", "Got100Continue",
 		}, events)
 	require.Falsef(t, wait100Continue, "wait 100 continue") // Note: not supported Expect: 100-continue

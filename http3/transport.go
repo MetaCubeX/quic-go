@@ -4,9 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/metacubex/http"
-	"github.com/metacubex/http/httptrace"
-	"github.com/metacubex/tls"
 	"io"
 	"log/slog"
 	"net"
@@ -14,6 +11,10 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+
+	"github.com/metacubex/http"
+	"github.com/metacubex/http/httptrace"
+	"github.com/metacubex/tls"
 
 	"golang.org/x/net/http/httpguts"
 
@@ -368,7 +369,6 @@ func (t *Transport) dial(ctx context.Context, hostname string) (*quic.Conn, clie
 				return nil, err
 			}
 			trace := httptrace.ContextClientTrace(ctx)
-			traceConnectStart(trace, network, udpAddr.String())
 			traceTLSHandshakeStart(trace)
 			conn, err := t.transport.DialEarly(ctx, udpAddr, tlsCfg, cfg)
 			var state tls.ConnectionState
@@ -376,7 +376,6 @@ func (t *Transport) dial(ctx context.Context, hostname string) (*quic.Conn, clie
 				state = conn.ConnectionState().TLS
 			}
 			traceTLSHandshakeDone(trace, state, err)
-			traceConnectDone(trace, network, udpAddr.String(), err)
 			return conn, err
 		}
 	}

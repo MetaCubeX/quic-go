@@ -1,11 +1,12 @@
 package http3
 
 import (
-	"github.com/metacubex/http/httptrace"
-	"github.com/metacubex/tls"
 	"net"
 	"net/textproto"
 	"time"
+
+	"github.com/metacubex/http/httptrace"
+	"github.com/metacubex/tls"
 
 	"github.com/quic-go/quic-go"
 )
@@ -77,18 +78,6 @@ func traceWroteHeaders(trace *httptrace.ClientTrace) {
 func traceWroteRequest(trace *httptrace.ClientTrace, err error) {
 	if trace != nil && trace.WroteRequest != nil {
 		trace.WroteRequest(httptrace.WroteRequestInfo{Err: err})
-	}
-}
-
-func traceConnectStart(trace *httptrace.ClientTrace, network, addr string) {
-	if trace != nil && trace.ConnectStart != nil {
-		trace.ConnectStart(network, addr)
-	}
-}
-
-func traceConnectDone(trace *httptrace.ClientTrace, network, addr string, err error) {
-	if trace != nil && trace.ConnectDone != nil {
-		trace.ConnectDone(network, addr, err)
 	}
 }
 
