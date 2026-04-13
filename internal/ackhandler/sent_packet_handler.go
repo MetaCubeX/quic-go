@@ -466,7 +466,7 @@ func (h *sentPacketHandler) ReceivedAck(ack *wire.AckFrame, encLevel protocol.En
 		}
 	}
 
-	if cex, ok := h.congestion.(congestion.SendAlgorithmEx); ok &&
+	if cex, ok := h.getCongestionControl().(congestion.SendAlgorithmEx); ok &&
 		(len(h.ackedPacketsInfo) != 0 || len(h.lostPacketsInfo) != 0) {
 		cex.OnCongestionEventEx(priorInFlight, rcvTime, h.ackedPacketsInfo, h.lostPacketsInfo)
 	}
@@ -935,7 +935,7 @@ func (h *sentPacketHandler) OnLossDetectionTimeout(now monotime.Time) error {
 		// Early retransmit or time loss detection
 		h.detectLostPackets(now, encLevel)
 
-		if cex, ok := h.congestion.(congestion.SendAlgorithmEx); ok &&
+		if cex, ok := h.getCongestionControl().(congestion.SendAlgorithmEx); ok &&
 			len(h.lostPacketsInfo) != 0 {
 			cex.OnCongestionEventEx(priorInFlight, now, nil, h.lostPacketsInfo)
 		}
