@@ -383,6 +383,14 @@ func (t *Transport) dial(ctx context.Context, hostname string) (*quic.Conn, clie
 	if err != nil {
 		return nil, nil, err
 	}
+	// A Dial hook must return a non-nil connection whenever it returns a nil
+	// error. Guard against a misbehaving hook (or an inner QUIC dial that
+	// races connection teardown and yields (nil, nil)): without this check the
+	// nil conn is dereferenced in newClientConn (conn.QlogTrace()), panicking
+	// the whole process from the goroutine spawned by getClient.
+	if conn == nil {
+		return nil, nil, errors.New("http3: Dial returned a nil connection without an error")
+	}
 	clientConn := t.newClientConn(conn)
 	go func() {
 		for {
