@@ -9,8 +9,8 @@ import (
 	"math"
 	"testing"
 
+	"github.com/metacubex/qpack"
 	ossfuzzseeds "github.com/quic-go/go-ossfuzz-seeds"
-	"github.com/quic-go/qpack"
 
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/http/httpguts"

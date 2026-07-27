@@ -4,9 +4,9 @@ go 1.25.0
 
 require (
 	github.com/metacubex/http v0.1.7
+	github.com/metacubex/qpack v0.6.0
 	github.com/metacubex/tls v0.1.7
 	github.com/quic-go/go-ossfuzz-seeds v0.1.0
-	github.com/quic-go/qpack v0.6.0
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/mock v0.5.2
 	golang.org/x/crypto v0.54.0
