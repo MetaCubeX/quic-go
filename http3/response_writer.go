@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/metacubex/http"
-	"log/slog"
+	"golang.org/x/exp/slog"
 	"net/textproto"
 	"strconv"
 	"strings"

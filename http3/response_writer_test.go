@@ -3,8 +3,8 @@ package http3
 import (
 	"bytes"
 	"github.com/metacubex/http"
+	"golang.org/x/exp/slog"
 	"io"
-	"log/slog"
 	"testing"
 
 	"github.com/quic-go/quic-go"
