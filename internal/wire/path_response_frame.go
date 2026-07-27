@@ -3,7 +3,7 @@ package wire
 import (
 	"io"
 
-	"github.com/quic-go/quic-go/internal/protocol"
+	"github.com/metacubex/quic-go/internal/protocol"
 )
 
 // A PathResponseFrame is a PATH_RESPONSE frame

@@ -1,7 +1,7 @@
 package wire
 
 import (
-	"github.com/quic-go/quic-go/internal/protocol"
+	"github.com/metacubex/quic-go/internal/protocol"
 )
 
 // A Frame in QUIC

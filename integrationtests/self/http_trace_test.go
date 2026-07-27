@@ -12,7 +12,7 @@ import (
 	"github.com/metacubex/http/httptrace"
 	"github.com/metacubex/tls"
 
-	"github.com/quic-go/quic-go/http3"
+	"github.com/metacubex/quic-go/http3"
 	"github.com/stretchr/testify/require"
 )
 

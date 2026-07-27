@@ -15,10 +15,10 @@ import (
 
 	_ "github.com/metacubex/http/pprof"
 
-	"github.com/quic-go/quic-go"
-	"github.com/quic-go/quic-go/http3"
-	"github.com/quic-go/quic-go/http3/qlog"
-	"github.com/quic-go/quic-go/internal/testdata"
+	"github.com/metacubex/quic-go"
+	"github.com/metacubex/quic-go/http3"
+	"github.com/metacubex/quic-go/http3/qlog"
+	"github.com/metacubex/quic-go/internal/testdata"
 )
 
 type binds []string

@@ -3,7 +3,7 @@ module test
 go 1.20
 
 // The version doesn't matter here, as we're replacing it with the currently checked out code anyway.
-require github.com/quic-go/quic-go v0.21.0
+require github.com/metacubex/quic-go v0.21.0
 
 require (
 	github.com/metacubex/cpu v0.1.0 // indirect
@@ -21,4 +21,4 @@ require (
 	golang.org/x/text v0.22.0 // indirect
 )
 
-replace github.com/quic-go/quic-go => ../../
+replace github.com/metacubex/quic-go => ../../

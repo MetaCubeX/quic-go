@@ -6,8 +6,8 @@ import (
 	"io"
 	"sync"
 
-	"github.com/quic-go/quic-go"
-	"github.com/quic-go/quic-go/internal/utils"
+	"github.com/metacubex/quic-go"
+	"github.com/metacubex/quic-go/internal/utils"
 )
 
 // Settingser allows waiting for and retrieving the peer's HTTP/3 settings.

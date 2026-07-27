@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/metacubex/qpack"
-	"github.com/quic-go/quic-go/http3/qlog"
+	"github.com/metacubex/quic-go/http3/qlog"
 
 	"golang.org/x/net/http/httpguts"
 )

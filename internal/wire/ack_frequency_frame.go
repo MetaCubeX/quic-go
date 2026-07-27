@@ -4,8 +4,8 @@ import (
 	"math"
 	"time"
 
-	"github.com/quic-go/quic-go/internal/protocol"
-	"github.com/quic-go/quic-go/quicvarint"
+	"github.com/metacubex/quic-go/internal/protocol"
+	"github.com/metacubex/quic-go/quicvarint"
 )
 
 type AckFrequencyFrame struct {

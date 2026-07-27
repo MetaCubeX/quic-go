@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/quic-go/quic-go"
-	"github.com/quic-go/quic-go/http3"
-	h3qlog "github.com/quic-go/quic-go/http3/qlog"
-	"github.com/quic-go/quic-go/qlogwriter"
+	"github.com/metacubex/quic-go"
+	"github.com/metacubex/quic-go/http3"
+	h3qlog "github.com/metacubex/quic-go/http3/qlog"
+	"github.com/metacubex/quic-go/qlogwriter"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

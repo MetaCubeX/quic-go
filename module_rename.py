@@ -28,6 +28,6 @@ for dirpath, dirnames, filenames in os.walk("."):
     filenames = [f for f in filenames if os.path.splitext(f)[1] in EXTENSIONS]
     for filename in filenames:
         file_path = os.path.join(dirpath, filename)
-        with fileinput.FileInput(file_path, inplace=True) as file:
+        with fileinput.FileInput(file_path, inplace=True, encoding="utf-8") as file:
             for line in file:
                 print(replace_line(line), end="")
