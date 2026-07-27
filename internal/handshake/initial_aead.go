@@ -2,9 +2,9 @@ package handshake
 
 import (
 	"crypto"
-	"crypto/hkdf"
-	"fmt"
 	"github.com/metacubex/tls"
+
+	"golang.org/x/crypto/hkdf"
 
 	"github.com/quic-go/quic-go/internal/protocol"
 )
@@ -52,10 +52,7 @@ func NewInitialAEAD(connID protocol.ConnectionID, pers protocol.Perspective, v p
 }
 
 func computeSecrets(connID protocol.ConnectionID, v protocol.Version) (clientSecret, serverSecret []byte) {
-	initialSecret, err := hkdf.Extract(crypto.SHA256.New, connID.Bytes(), getSalt(v))
-	if err != nil {
-		panic(fmt.Errorf("quic: HKDF-Extract invocation failed unexpectedly: %v", err))
-	}
+	initialSecret := hkdf.Extract(crypto.SHA256.New, connID.Bytes(), getSalt(v))
 	clientSecret = hkdfExpandLabel(crypto.SHA256, initialSecret, []byte{}, "client in", crypto.SHA256.Size())
 	serverSecret = hkdfExpandLabel(crypto.SHA256, initialSecret, []byte{}, "server in", crypto.SHA256.Size())
 	return
