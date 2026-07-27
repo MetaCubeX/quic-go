@@ -4,7 +4,6 @@ import (
 	"crypto"
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/fips140"
 	"fmt"
 	"github.com/metacubex/tls"
 
@@ -19,7 +18,7 @@ type cipherSuite struct {
 	ID     uint16
 	Hash   crypto.Hash
 	KeyLen int
-	AEAD   func(key, nonceMask []byte) cipher.AEAD
+	AEAD   func(key, nonceMask []byte) *xorNonceAEAD
 }
 
 func (s cipherSuite) IVLen() int { return aeadNonceLength }
@@ -37,11 +36,7 @@ func getCipherSuite(id uint16) cipherSuite {
 	}
 }
 
-func aeadAESGCMTLS13(key, nonceMask []byte) cipher.AEAD {
-	if fips140.Enabled() {
-		return aeadAESGCMTLS13FIPS140(key, nonceMask)
-	}
-
+func aeadAESGCMTLS13(key, nonceMask []byte) *xorNonceAEAD {
 	if len(nonceMask) != aeadNonceLength {
 		panic("tls: internal error: wrong nonce length")
 	}
@@ -59,7 +54,7 @@ func aeadAESGCMTLS13(key, nonceMask []byte) cipher.AEAD {
 	return ret
 }
 
-func aeadChaCha20Poly1305(key, nonceMask []byte) cipher.AEAD {
+func aeadChaCha20Poly1305(key, nonceMask []byte) *xorNonceAEAD {
 	if len(nonceMask) != aeadNonceLength {
 		panic("tls: internal error: wrong nonce length")
 	}
