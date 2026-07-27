@@ -3,10 +3,10 @@ package quic
 import (
 	"context"
 	"testing"
-	"testing/synctest"
 
 	"github.com/quic-go/quic-go/internal/utils"
 	"github.com/quic-go/quic-go/internal/wire"
+	"github.com/quic-go/quic-go/testutils/synctest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

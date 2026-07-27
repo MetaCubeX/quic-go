@@ -11,7 +11,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
-	"testing/synctest"
 	"time"
 
 	"github.com/quic-go/quic-go"
@@ -20,6 +19,7 @@ import (
 	"github.com/quic-go/quic-go/qlog"
 	"github.com/quic-go/quic-go/qlogwriter"
 	"github.com/quic-go/quic-go/testutils/simnet"
+	"github.com/quic-go/quic-go/testutils/synctest"
 
 	"github.com/stretchr/testify/require"
 )

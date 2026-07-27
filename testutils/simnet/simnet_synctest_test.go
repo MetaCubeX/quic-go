@@ -4,8 +4,9 @@ import (
 	"math"
 	"net"
 	"testing"
-	"testing/synctest"
 	"time"
+
+	"github.com/quic-go/quic-go/testutils/synctest"
 
 	"github.com/stretchr/testify/require"
 )

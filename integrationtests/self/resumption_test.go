@@ -5,11 +5,11 @@ import (
 	"github.com/metacubex/tls"
 	"net"
 	"testing"
-	"testing/synctest"
 	"time"
 
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/testutils/simnet"
+	"github.com/quic-go/quic-go/testutils/synctest"
 
 	"github.com/stretchr/testify/require"
 )

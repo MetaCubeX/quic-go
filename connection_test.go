@@ -11,7 +11,6 @@ import (
 	"net/netip"
 	"strconv"
 	"testing"
-	"testing/synctest"
 	"time"
 
 	"github.com/quic-go/quic-go/internal/ackhandler"
@@ -26,6 +25,7 @@ import (
 	"github.com/quic-go/quic-go/qlog"
 	"github.com/quic-go/quic-go/qlogwriter"
 	"github.com/quic-go/quic-go/testutils/events"
+	"github.com/quic-go/quic-go/testutils/synctest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

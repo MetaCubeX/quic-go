@@ -8,12 +8,12 @@ import (
 	"net"
 	"sync"
 	"testing"
-	"testing/synctest"
 	"time"
 
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
 	"github.com/quic-go/quic-go/quicvarint"
+	"github.com/quic-go/quic-go/testutils/synctest"
 
 	"github.com/stretchr/testify/require"
 )
