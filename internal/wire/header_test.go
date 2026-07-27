@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/binary"
+	mrand "github.com/metacubex/randv2"
 	"io"
-	mrand "math/rand/v2"
 	"testing"
 
 	"github.com/quic-go/quic-go/internal/protocol"

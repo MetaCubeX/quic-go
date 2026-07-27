@@ -4,8 +4,8 @@ import (
 	"crypto/fips140"
 	"crypto/rand"
 	"fmt"
+	mrand "github.com/metacubex/randv2"
 	"github.com/metacubex/tls"
-	mrand "math/rand/v2"
 	"testing"
 	"time"
 

@@ -4,8 +4,8 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	mrand "github.com/metacubex/randv2"
 	"io"
-	mrand "math/rand/v2"
 	"testing"
 	"time"
 

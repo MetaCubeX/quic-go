@@ -1,8 +1,8 @@
 package ackhandler
 
 import (
+	rand "github.com/metacubex/randv2"
 	"golang.org/x/exp/slices"
-	"math/rand/v2"
 	"testing"
 
 	"github.com/quic-go/quic-go/internal/protocol"

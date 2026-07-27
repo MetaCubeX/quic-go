@@ -3,8 +3,8 @@ package quicvarint
 import (
 	"bytes"
 	"fmt"
+	rand "github.com/metacubex/randv2"
 	"io"
-	"math/rand/v2"
 	"testing"
 
 	"github.com/stretchr/testify/require"

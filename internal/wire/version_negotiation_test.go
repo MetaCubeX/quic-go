@@ -3,7 +3,7 @@ package wire
 import (
 	"crypto/rand"
 	"encoding/binary"
-	mrand "math/rand/v2"
+	mrand "github.com/metacubex/randv2"
 	"testing"
 
 	"github.com/quic-go/quic-go/internal/protocol"

@@ -3,9 +3,9 @@ package quic
 import (
 	rand "crypto/rand"
 	"fmt"
+	mrand "github.com/metacubex/randv2"
 	"golang.org/x/exp/slices"
 	"math"
-	mrand "math/rand/v2"
 	"testing"
 
 	ossfuzzseeds "github.com/quic-go/go-ossfuzz-seeds"

@@ -3,7 +3,7 @@ package quic
 import (
 	"bytes"
 	"encoding/binary"
-	"math/rand/v2"
+	rand "github.com/metacubex/randv2"
 	"testing"
 
 	"github.com/quic-go/quic-go/internal/ackhandler"

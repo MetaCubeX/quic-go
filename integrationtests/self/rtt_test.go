@@ -3,8 +3,8 @@ package self_test
 import (
 	"context"
 	"errors"
+	rand "github.com/metacubex/randv2"
 	"io"
-	"math/rand/v2"
 	"net"
 	"testing"
 	"testing/synctest"

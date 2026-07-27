@@ -1,8 +1,8 @@
 package congestion
 
 import (
+	rand "github.com/metacubex/randv2"
 	"math"
-	"math/rand/v2"
 	"testing"
 	"time"
 

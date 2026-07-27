@@ -3,8 +3,8 @@ package ackhandler
 import (
 	"encoding/binary"
 	"fmt"
+	rand "github.com/metacubex/randv2"
 	"golang.org/x/exp/slices"
-	"math/rand/v2"
 	"testing"
 	"time"
 
