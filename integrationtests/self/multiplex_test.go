@@ -205,7 +205,8 @@ func TestMultiplexingNonQUICPackets(t *testing.T) {
 		err  error
 	}
 	rcvdPackets := make(chan nonQUICPacket, numPackets)
-	receiveCtx := t.Context()
+	receiveCtx, receiveCancel := context.WithCancel(context.Background())
+	defer receiveCancel()
 	// start receiving non-QUIC packets
 	go func() {
 		for {

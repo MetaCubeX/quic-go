@@ -1158,7 +1158,8 @@ func TestHTTPStreamer(t *testing.T) {
 	require.NoError(t, err)
 	tlsConf := getTLSClientConfigWithoutServerName()
 	tlsConf.NextProtos = []string{http3.NextProtoH3}
-	ctx := t.Context()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	conn, err := quic.Dial(ctx, newUDPConnLocalhost(t), &net.UDPAddr{IP: net.IPv4(127, 0, 0, 1), Port: port}, tlsConf, getQuicConfig(nil))
 	require.NoError(t, err)
 	defer conn.CloseWithError(0, "")
