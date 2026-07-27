@@ -14,7 +14,7 @@ import (
 	"github.com/quic-go/quic-go/quicvarint"
 	"github.com/quic-go/quic-go/testutils/events"
 
-	ossfuzzseeds "github.com/quic-go/go-ossfuzz-seeds"
+	"github.com/quic-go/quic-go/testutils/ossfuzzseeds"
 
 	"github.com/stretchr/testify/require"
 )

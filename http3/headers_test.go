@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/metacubex/qpack"
-	ossfuzzseeds "github.com/quic-go/go-ossfuzz-seeds"
+	"github.com/quic-go/quic-go/testutils/ossfuzzseeds"
 
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/http/httpguts"

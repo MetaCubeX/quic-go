@@ -18,7 +18,7 @@ import (
 	"github.com/quic-go/quic-go/internal/utils"
 	"github.com/quic-go/quic-go/internal/wire"
 
-	ossfuzzseeds "github.com/quic-go/go-ossfuzz-seeds"
+	"github.com/quic-go/quic-go/testutils/ossfuzzseeds"
 )
 
 var (

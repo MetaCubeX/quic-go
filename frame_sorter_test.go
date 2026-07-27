@@ -8,10 +8,10 @@ import (
 	"math"
 	"testing"
 
-	ossfuzzseeds "github.com/quic-go/go-ossfuzz-seeds"
 	"github.com/quic-go/quic-go/internal/protocol"
 	"github.com/quic-go/quic-go/internal/utils"
 	"github.com/quic-go/quic-go/internal/utils/tree"
+	"github.com/quic-go/quic-go/testutils/ossfuzzseeds"
 
 	"github.com/stretchr/testify/require"
 )

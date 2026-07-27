@@ -13,7 +13,7 @@ import (
 	"github.com/quic-go/quic-go/internal/qerr"
 	"github.com/quic-go/quic-go/quicvarint"
 
-	ossfuzzseeds "github.com/quic-go/go-ossfuzz-seeds"
+	"github.com/quic-go/quic-go/testutils/ossfuzzseeds"
 
 	"github.com/stretchr/testify/require"
 )
