@@ -3,9 +3,9 @@ package http3
 import (
 	"context"
 	"errors"
+	"github.com/metacubex/http"
 	"io"
 	"log/slog"
-	"net/http"
 	"runtime"
 	"strconv"
 	"time"

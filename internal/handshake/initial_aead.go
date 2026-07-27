@@ -3,8 +3,8 @@ package handshake
 import (
 	"crypto"
 	"crypto/hkdf"
-	"crypto/tls"
 	"fmt"
+	"github.com/metacubex/tls"
 
 	"github.com/quic-go/quic-go/internal/protocol"
 )

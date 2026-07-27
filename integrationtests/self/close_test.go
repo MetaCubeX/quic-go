@@ -2,7 +2,7 @@ package self_test
 
 import (
 	"context"
-	"crypto/tls"
+	"github.com/metacubex/tls"
 	"net"
 	"sync"
 	"sync/atomic"

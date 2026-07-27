@@ -1,8 +1,8 @@
 package qerr
 
 import (
-	"crypto/tls"
 	"fmt"
+	"github.com/metacubex/tls"
 )
 
 // TransportErrorCode is a QUIC transport error.

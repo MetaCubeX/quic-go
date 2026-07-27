@@ -2,8 +2,8 @@ package handshake
 
 import (
 	"crypto/rand"
-	"crypto/tls"
 	"fmt"
+	"github.com/metacubex/tls"
 	"testing"
 
 	"github.com/quic-go/quic-go/internal/protocol"

@@ -2,8 +2,8 @@ package handshake
 
 import (
 	"crypto/fips140"
-	"crypto/tls"
 	"encoding/hex"
+	"github.com/metacubex/tls"
 	"strings"
 	"testing"
 

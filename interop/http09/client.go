@@ -2,12 +2,12 @@ package http09
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
+	"github.com/metacubex/http"
+	"github.com/metacubex/tls"
 	"io"
 	"log"
 	"net"
-	"net/http"
 	"strings"
 	"sync"
 

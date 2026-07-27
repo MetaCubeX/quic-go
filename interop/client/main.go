@@ -1,13 +1,13 @@
 package main
 
 import (
-	"crypto/tls"
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/metacubex/http"
+	"github.com/metacubex/tls"
 	"io"
 	"log"
-	"net/http"
 	"os"
 	"strings"
 	"time"

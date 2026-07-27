@@ -1,7 +1,7 @@
 package testdata
 
 import (
-	"crypto/tls"
+	"github.com/metacubex/tls"
 	"io"
 	"testing"
 

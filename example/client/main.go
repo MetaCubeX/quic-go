@@ -2,12 +2,12 @@ package main
 
 import (
 	"bytes"
-	"crypto/tls"
 	"crypto/x509"
 	"flag"
+	"github.com/metacubex/http"
+	"github.com/metacubex/tls"
 	"io"
 	"log"
-	"net/http"
 	"os"
 	"sync"
 

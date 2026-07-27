@@ -5,15 +5,15 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/metacubex/http"
 	"io"
 	"log"
 	"mime/multipart"
-	"net/http"
 	"strconv"
 	"strings"
 	"sync"
 
-	_ "net/http/pprof"
+	_ "github.com/metacubex/http/pprof"
 
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"

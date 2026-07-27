@@ -1,9 +1,9 @@
 package self_test
 
 import (
+	"github.com/metacubex/http"
 	"io"
 	"net"
-	"net/http"
 	"strconv"
 	"testing"
 	"time"

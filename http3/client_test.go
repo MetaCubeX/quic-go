@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"github.com/metacubex/http"
+	"github.com/metacubex/http/httptest"
 	"io"
 	mrand "math/rand/v2"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 

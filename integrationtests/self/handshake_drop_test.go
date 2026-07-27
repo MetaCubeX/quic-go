@@ -3,8 +3,8 @@ package self_test
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"fmt"
+	"github.com/metacubex/tls"
 	"io"
 	mrand "math/rand/v2"
 	"net"

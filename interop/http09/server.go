@@ -2,9 +2,9 @@ package http09
 
 import (
 	"context"
+	"github.com/metacubex/http"
 	"io"
 	"log"
-	"net/http"
 	"net/url"
 	"runtime"
 	"strings"

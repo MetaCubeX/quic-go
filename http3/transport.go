@@ -2,14 +2,14 @@ package http3
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/metacubex/http"
+	"github.com/metacubex/http/httptrace"
+	"github.com/metacubex/tls"
 	"io"
 	"log/slog"
 	"net"
-	"net/http"
-	"net/http/httptrace"
 	"net/url"
 	"strings"
 	"sync"

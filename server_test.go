@@ -3,8 +3,8 @@ package quic
 import (
 	"context"
 	"crypto/rand"
-	"crypto/tls"
 	"errors"
+	"github.com/metacubex/tls"
 	"net"
 	"slices"
 	"testing"

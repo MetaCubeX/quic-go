@@ -2,8 +2,8 @@ package quic
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
+	"github.com/metacubex/tls"
 	"net"
 	"slices"
 	"time"

@@ -1,9 +1,9 @@
 package http3
 
 import (
-	"crypto/tls"
+	"github.com/metacubex/http/httptrace"
+	"github.com/metacubex/tls"
 	"net"
-	"net/http/httptrace"
 	"net/textproto"
 	"time"
 

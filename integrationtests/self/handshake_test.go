@@ -3,9 +3,9 @@ package self_test
 import (
 	"context"
 	"crypto/fips140"
-	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/metacubex/tls"
 	"io"
 	"net"
 	"runtime"

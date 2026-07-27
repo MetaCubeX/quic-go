@@ -2,9 +2,9 @@ package quic
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/metacubex/tls"
 	"net"
 	"sync"
 	"time"

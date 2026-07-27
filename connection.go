@@ -3,9 +3,9 @@ package quic
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/metacubex/tls"
 	"io"
 	"net"
 	"reflect"

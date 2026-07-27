@@ -3,9 +3,9 @@ package self_test
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/metacubex/tls"
 	"io"
 	mrand "math/rand/v2"
 	"net"

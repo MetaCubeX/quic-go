@@ -3,9 +3,9 @@ package quic
 import (
 	"context"
 	"crypto/rand"
-	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/metacubex/tls"
 	"net"
 	"sync"
 	"sync/atomic"

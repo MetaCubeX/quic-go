@@ -3,9 +3,9 @@ package self_test
 import (
 	"context"
 	"fmt"
+	"github.com/metacubex/http"
 	"io"
 	"net"
-	"net/http"
 	"testing"
 	"time"
 

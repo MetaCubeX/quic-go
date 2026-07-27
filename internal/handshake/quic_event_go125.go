@@ -2,7 +2,7 @@
 
 package handshake
 
-import "crypto/tls"
+import "github.com/metacubex/tls"
 
 const quicErrorEvent tls.QUICEventKind = -1
 
