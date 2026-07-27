@@ -56,9 +56,10 @@ func main() {
 	}
 
 	var wg sync.WaitGroup
+	wg.Add(len(urls))
 	for _, addr := range urls {
 		log.Printf("GET %s", addr)
-		wg.Go(func() {
+		go func(addr string) {
 			rsp, err := hclient.Get(addr)
 			if err != nil {
 				log.Fatal(err)
@@ -75,7 +76,8 @@ func main() {
 			} else {
 				log.Printf("Response Body (%d bytes):\n%s", body.Len(), body.Bytes())
 			}
-		})
+			wg.Done()
+		}(addr)
 	}
 	wg.Wait()
 }

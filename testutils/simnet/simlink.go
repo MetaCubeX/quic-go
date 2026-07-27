@@ -65,8 +65,9 @@ func (l *SimulatedLink) Start() {
 	l.downstreamQueue = newQueue()
 	l.upstreamQueue = newQueue()
 
-	l.wg.Go(func() { l.backgroundDownlink() })
-	l.wg.Go(func() { l.backgroundUplink() })
+	l.wg.Add(2)
+	go l.backgroundDownlink()
+	go l.backgroundUplink()
 }
 
 func (l *SimulatedLink) Close() error {
@@ -77,6 +78,8 @@ func (l *SimulatedLink) Close() error {
 }
 
 func (l *SimulatedLink) backgroundDownlink() {
+	defer l.wg.Done()
+
 	for {
 		// Dequeue a packet (this will block until packet is ready for delivery)
 		// Dequeue() returns false when the queue is closed
@@ -91,6 +94,8 @@ func (l *SimulatedLink) backgroundDownlink() {
 }
 
 func (l *SimulatedLink) backgroundUplink() {
+	defer l.wg.Done()
+
 	for {
 		// Dequeue a packet (this will block until packet is ready for delivery)
 		// Dequeue() returns false when the queue is closed

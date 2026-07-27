@@ -234,13 +234,15 @@ func (c *rawConn) handleControlStream(str *quic.ReceiveStream) {
 			c.CloseWithError(quic.ApplicationErrorCode(ErrCodeSettingsError), "missing QUIC Datagram support")
 			return
 		}
-		c.qloggerWG.Go(func() {
+		c.qloggerWG.Add(1)
+		go func() {
+			defer c.qloggerWG.Done()
 			if err := c.receiveDatagrams(); err != nil {
 				if c.logger != nil {
 					c.logger.Debug("receiving datagrams failed", "error", err)
 				}
 			}
-		})
+		}()
 	}
 
 	if c.controlStrHandler != nil {

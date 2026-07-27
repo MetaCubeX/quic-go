@@ -64,8 +64,10 @@ func TestHTTPRawConn(t *testing.T) {
 				return
 			}
 			var wg sync.WaitGroup
+			wg.Add(2)
 			// accept and handle unidirectional streams opened by the client
-			wg.Go(func() {
+			go func() {
+				defer wg.Done()
 				for {
 					str, err := serverConn.AcceptUniStream(context.Background())
 					if err != nil {
@@ -73,9 +75,10 @@ func TestHTTPRawConn(t *testing.T) {
 					}
 					go rawServerConn.HandleUnidirectionalStream(str)
 				}
-			})
+			}()
 			// accept and handle bidirectional streams opened by the client
-			wg.Go(func() {
+			go func() {
+				defer wg.Done()
 				for {
 					str, err := serverConn.AcceptStream(context.Background())
 					if err != nil {
@@ -93,7 +96,7 @@ func TestHTTPRawConn(t *testing.T) {
 						go rawServerConn.HandleRequestStream(str)
 					}
 				}
-			})
+			}()
 			wg.Wait()
 			<-serverConn.Context().Done()
 			errChan <- nil
